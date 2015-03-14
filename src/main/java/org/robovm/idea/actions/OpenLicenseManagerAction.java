@@ -4,8 +4,11 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.robovm.lm.LicenseManager;
 import com.robovm.lm.ui.GUI;
 import org.robovm.compiler.AppCompiler;
+
+import java.io.IOException;
 
 /**
  * Created by badlogic on 12/03/15.
@@ -26,5 +29,11 @@ public class OpenLicenseManagerAction extends AnAction {
         Project project = e.getProject();
         System.out.println(project);
         //GUI.main(new String[0]);
+
+        try {
+            LicenseManager.forkUI();
+        } catch (IOException e1) {
+
+        }
     }
 }

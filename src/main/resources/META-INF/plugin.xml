@@ -23,7 +23,6 @@
     -->
 
     <extensions defaultExtensionNs="com.intellij">
-
         <!-- Run configuration -->
         <!--<configurationType implementation="org.robovm.intellij.runconf.RoboVMConfigurationType" />-->
 
@@ -37,13 +36,14 @@
 
 
     <application-components>
-
-        <!-- Add your application components here -->
     </application-components>
 
     <project-components>
 
         <!-- Add your project components here -->
+        <component>
+            <implementation-class>org.robovm.idea.actions.RoboVmProjectComponent</implementation-class>
+        </component>
     </project-components>
 
 

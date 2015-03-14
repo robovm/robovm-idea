@@ -16,28 +16,103 @@
  */
 package org.robovm.idea.actions;
 
+import com.intellij.execution.filters.TextConsoleBuilderFactory;
+import com.intellij.execution.ui.ConsoleView;
+import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowAnchor;
+import com.intellij.openapi.wm.ToolWindowId;
+import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.ui.content.Content;
+import com.intellij.ui.content.ContentManager;
+import com.intellij.util.ui.UIUtil;
+import org.robovm.compiler.log.Logger;
+
+import javax.swing.*;
+import java.awt.*;
 import java.io.StringWriter;
 
 /**
  * Created by badlogic on 14/03/15.
  */
 public class RobovmPluginUtils {
-    // this is how we get the classpath of a module
-    // ModuleRootManager.getInstance(ModuleManager.getInstance(project).getModules()[3]).orderEntries().classes().getRoots();
+    private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
+    static volatile Project project;
+    static volatile ConsoleView consoleView;
+    static volatile ToolWindow toolWindow;
 
-    // this is how we get the source paths
-    // ModuleRootManager.getInstance(ModuleManager.getInstance(project).getModules()[3]).orderEntries().getSourcePathsList()
+    public static void logInfo(String format, Object ... args) {
+        log(ConsoleViewContentType.SYSTEM_OUTPUT, "[INFO] " + format, args);
+    }
 
-    // need to recursively get the dependencies as well, both classes and sources
-    // should be simple
+    public static void logError(String format, Object ... args) {
+        log(ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] " + format, args);
+    }
 
-    // attach debugger https://devnet.jetbrains.com/message/5522503#5522503
+    public static void logWarn(String format, Object ... args) {
+        log(ConsoleViewContentType.ERROR_OUTPUT, "[WARNING] " + format, args);
+    }
 
-//    Project project = e.getProject();
-//    System.out.println(project);
-    //GUI.main(new String[0]);
+    public static void logDebug(String format, Object ... args) {
+        log(ConsoleViewContentType.NORMAL_OUTPUT, "[DEBUG] " + format, args);
+    }
 
-    public static void log(String tag, String format, Object ... objects) {
-        String.format("[%s] " + format, tag, objects);
+    private static void log(final ConsoleViewContentType type, String format, Object ... args) {
+        final String s = String.format(format, args) + "\n";
+        UIUtil.invokeLaterIfNeeded(new Runnable() {
+            @Override
+            public void run() {
+                if(consoleView != null) {
+                    consoleView.print(s, type);
+                }
+            }
+        });
+    }
+
+    public static Logger getLogger() {
+        return new Logger() {
+            @Override
+            public void debug(String s, Object... objects) {
+                logDebug(s, objects);
+            }
+
+            @Override
+            public void info(String s, Object... objects) {
+                logInfo(s, objects);
+            }
+
+            @Override
+            public void warn(String s, Object... objects) {
+                logWarn(s, objects);
+            }
+
+            @Override
+            public void error(String s, Object... objects) {
+                logError(s, objects);
+            }
+        };
+    }
+
+    public static void initializeProject(final Project project) {
+        // store the project, we may need it later
+        RobovmPluginUtils.project = project;
+
+        // initialize our tool window to which we
+        // log all messages
+        UIUtil.invokeLaterIfNeeded(new Runnable() {
+            @Override
+            public void run() {
+                if (project.isDisposed()) {
+                    return;
+                }
+                toolWindow = ToolWindowManager.getInstance(project).registerToolWindow(ROBOVM_TOOLWINDOW_ID, false, ToolWindowAnchor.BOTTOM, project, true);
+                consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
+                Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "RoboVM Console", true);
+                toolWindow.getContentManager().addContent(content);
+                logInfo("RoboVM plugin initialized");
+            }
+        });
     }
 }

@@ -1,0 +1,60 @@
+<idea-plugin version="2">
+    <id>org.robovm.idea</id>
+    <name>RoboVM Intellij IDEA Plugin</name>
+    <version>1.3</version>
+    <vendor url="http://www.robovm.com">RoboVM</vendor>
+
+    <description><![CDATA[
+     RoboVM support for IntelliJ<br>
+    ]]></description>
+
+    <change-notes><![CDATA[
+
+    ]]>
+    </change-notes>
+
+    <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
+    <idea-version since-build="131"/>
+
+    <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
+
+    <extensions defaultExtensionNs="com.intellij">
+
+        <!-- Run configuration -->
+        <!--<configurationType implementation="org.robovm.intellij.runconf.RoboVMConfigurationType" />-->
+
+        <!-- Run configuration runner -->
+        <!--<programRunner implementation="org.robovm.intellij.runconf.RoboVMRunner"/>-->
+
+        <!-- Existing project template -->
+        <!--<projectTemplate projectType="iOS Application" templatePath="resources/iOS Application (RoboVM).zip" category="true"/>-->
+
+    </extensions>
+
+
+    <application-components>
+
+        <!-- Add your application components here -->
+    </application-components>
+
+    <project-components>
+
+        <!-- Add your project components here -->
+    </project-components>
+
+
+
+    <!--<depends>org.jetbrains.plugins.gradle</depends>-->
+    <actions>
+        <group id="org.robovm.idea.Menu" text="RoboVM" description="RoboVM Menu">
+            <add-to-group group-id="MainMenu" anchor="last"  />
+            <action id="org.robovm.idea.open-license-manager" class="org.robovm.idea.actions.OpenLicenseManagerAction"
+                    text="License Manager"/>
+        </group>
+    </actions>
+
+</idea-plugin>

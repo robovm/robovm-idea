@@ -32,8 +32,7 @@ public class RoboVmModuleWizardStep extends ModuleWizardStep {
 
     public RoboVmModuleWizardStep(RoboVmModuleBuilder builder, WizardContext wizardContext, ModulesProvider modulesProvider) {
         super();
-        panel = new JPanel();
-        panel.setBackground(Color.RED);
+        panel = new RoboVmNewModuleEditor().panel;
     }
 
     @Override

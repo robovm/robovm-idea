@@ -109,4 +109,12 @@ public class RoboVmPluginUtils {
             }
         });
     }
+
+    public static void unregisterProject(Project project) {
+        if(consoleView != null) {
+            consoleView.dispose();
+        }
+        consoleView = null;
+        ToolWindowManager.getInstance(project).unregisterToolWindow(ROBOVM_TOOLWINDOW_ID);
+    }
 }

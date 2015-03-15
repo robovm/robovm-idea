@@ -25,6 +25,8 @@ import com.intellij.platform.templates.BuilderBasedTemplate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import javax.swing.*;
+
 /**
  * Returns a project template for every template known
  * by the templater. If a user selects one of the templates
@@ -46,6 +48,11 @@ public class RoboVmTemplatesFactory extends ProjectTemplatesFactory {
     @Override
     public String getParentGroup(String group) {
         return "Java";
+    }
+
+    @Override
+    public Icon getGroupIcon(String group) {
+        return RoboVmIcons.ROBOVM_SMALL;
     }
 
     @NotNull
@@ -76,6 +83,11 @@ public class RoboVmTemplatesFactory extends ProjectTemplatesFactory {
         @Override
         public String getDescription() {
             return description;
+        }
+
+        @Override
+        public Icon getIcon() {
+            return RoboVmIcons.ROBOVM_SMALL;
         }
     }
 }

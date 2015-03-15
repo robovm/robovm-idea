@@ -47,5 +47,6 @@ public class RoboVmProjectComponent implements ProjectComponent {
     }
 
     public void projectClosed() {
+        RoboVmPluginUtils.unregisterProject(project);
     }
 }

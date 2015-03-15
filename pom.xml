@@ -12,6 +12,7 @@
     <properties>
         <robovm.version>${project.version}</robovm.version>
         <ij.plugin>true</ij.plugin>
+        <idea.home>/Applications/IntelliJ IDEA 14 CE.app/Contents/lib</idea.home>
     </properties>
 
     <dependencies>
@@ -113,9 +114,53 @@
                     <optimize>true</optimize>
                     <encoding>UTF-8</encoding>
                     <compilerArguments>
-                        <extdirs>/Applications/IntelliJ IDEA 14 CE.app/Contents/lib</extdirs>
+                        <extdirs>${idea.home}</extdirs>
                     </compilerArguments>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <id>compile-forms</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <path id="maven.plugin.complete.classpath">
+                                    <path refid="maven.plugin.classpath" />
+                                    <fileset dir="${idea.home}">
+                                        <include name="**/*.jar"/>
+                                    </fileset>
+                                </path>
+                                <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="maven.plugin.complete.classpath" />
+                                <path id="sourcepath">
+                                    <dirset dir="${project.basedir}">
+                                        <include name="src/main/java" />
+                                        <include name="src/main/resources" />
+                                    </dirset>
+                                </path>
+                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}" extdirs="${idea.home}">
+                                    <classpath refid="maven.compile.classpath" />
+                                    <src refid="sourcepath" />
+                                </instrumentIdeaExtensions>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.sun</groupId>
+                        <artifactId>tools</artifactId>
+                        <version>1.7.0</version>
+                        <scope>system</scope>
+                        <systemPath>${env.JAVA_HOME}/lib/tools.jar</systemPath>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

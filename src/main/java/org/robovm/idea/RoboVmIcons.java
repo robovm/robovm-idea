@@ -16,21 +16,14 @@
  */
 package org.robovm.idea;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.robovm.lm.LicenseManager;
-import com.robovm.lm.ui.GUI;
-import org.robovm.compiler.AppCompiler;
+import com.intellij.openapi.util.IconLoader;
 
-import java.io.IOException;
+import javax.swing.*;
 
 /**
- * Called when the menu entry RoboVM -> License Manager is clicked.
+ * preloads icons used by various components
  */
-public class OpenLicenseManagerAction extends AnAction {
-    public void actionPerformed(AnActionEvent e) {
-        GUI.launch(false);
-    }
+public class RoboVmIcons {
+    public static final Icon ROBOVM_SMALL = IconLoader.findIcon("/icons/robovm_small.png");
+    public static final Icon ROBOVM_LARGE = IconLoader.findIcon("/icons/robovm_large.png");
 }

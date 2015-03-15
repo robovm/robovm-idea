@@ -14,14 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea.actions;
+package org.robovm.idea;
 
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Created by badlogic on 14/03/15.
+ * Used to setup the {@link org.robovm.idea.RoboVmPluginUtils} whenever
+ * a project is opened.
  */
 public class RoboVmProjectComponent implements ProjectComponent {
     private final Project project;
@@ -42,7 +43,7 @@ public class RoboVmProjectComponent implements ProjectComponent {
     }
 
     public void projectOpened() {
-        RobovmPluginUtils.initializeProject(project);
+        RoboVmPluginUtils.initializeProject(project);
     }
 
     public void projectClosed() {

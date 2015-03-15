@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea.actions;
+package org.robovm.idea;
 
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -27,7 +27,7 @@ import org.robovm.compiler.AppCompiler;
 import java.io.IOException;
 
 /**
- * Created by badlogic on 12/03/15.
+ * Called when the menu entry RoboVM -> License Manager is clicked.
  */
 public class OpenLicenseManagerAction extends AnAction {
     public void actionPerformed(AnActionEvent e) {

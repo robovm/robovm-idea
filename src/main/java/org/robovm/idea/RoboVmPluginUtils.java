@@ -14,30 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea.actions;
+package org.robovm.idea;
 
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
-import com.intellij.openapi.wm.ToolWindowId;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentManager;
 import com.intellij.util.ui.UIUtil;
 import org.robovm.compiler.log.Logger;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.StringWriter;
-
 /**
- * Created by badlogic on 14/03/15.
+ * Provides util for the other components of the plugin such
+ * as logging.
  */
-public class RobovmPluginUtils {
+public class RoboVmPluginUtils {
     private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
     static volatile Project project;
     static volatile ConsoleView consoleView;
@@ -97,7 +91,7 @@ public class RobovmPluginUtils {
 
     public static void initializeProject(final Project project) {
         // store the project, we may need it later
-        RobovmPluginUtils.project = project;
+        RoboVmPluginUtils.project = project;
 
         // initialize our tool window to which we
         // log all messages

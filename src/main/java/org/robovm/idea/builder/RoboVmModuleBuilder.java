@@ -16,20 +16,21 @@
  */
 package org.robovm.idea.builder;
 
-import com.intellij.ide.util.projectWizard.*;
-import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
+import com.intellij.ide.util.projectWizard.ModuleWizardStep;
+import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectType;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ContentEntry;
-import com.intellij.openapi.roots.ModifiableRootModel;
+import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
-import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.pom.java.LanguageLevel;
 import org.jetbrains.annotations.Nullable;
+import org.robovm.idea.RoboVmPlugin;
 import org.robovm.templater.Templater;
 
 import java.io.File;
@@ -46,55 +47,45 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
     private String appName;
     private String appId;
 
-    private Sdk mySdk;
-    private ProjectType projectType;
-
     public RoboVmModuleBuilder(String templateName) {
         this.templateName = templateName;
     }
 
     public void setupRootModel(final ModifiableRootModel rootModel) throws ConfigurationException {
+        // set the RoboVM SDK instead of a JDK
+        for(Sdk sdk: ProjectJdkTable.getInstance().getAllJdks()) {
+            if(sdk.getHomePath().equals(RoboVmPlugin.getSdkHome().getAbsolutePath())) {
+                myJdk = sdk;
+                break;
+            }
+        }
+        rootModel.getModuleExtension(LanguageLevelModuleExtension.class).setLanguageLevel(LanguageLevel.HIGHEST);
         super.setupRootModel(rootModel);
 
-        // FIXME setup our own SDK
-        // rootModel.setSdk(mySdk);
-
+        // extract the template files and setup the source
+        // folders
         VirtualFile[] files = rootModel.getContentRoots();
         if (files.length > 0) {
             final VirtualFile contentRoot = files[0];
             final Project project = rootModel.getProject();
+            Templater templater = new Templater(templateName);
+            templater.appId(appId);
+            templater.appName(appName);
+            templater.executable(appName);
+            templater.mainClass(mainClassName);
+            templater.packageName(packageName);
+            templater.buildProject(new File(contentRoot.getCanonicalPath()));
+            contentRoot.refresh(false, true);
 
-            StartupManager.getInstance(project).runWhenProjectIsInitialized(new Runnable() {
-                public void run() {
-                    ApplicationManager.getApplication().invokeLater(new Runnable() {
-                        public void run() {
-                            ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                                public void run() {
-                                    createDirectoryStructure(contentRoot, rootModel, project);
-                                }
-                            });
-                        }
-                    });
+            for(ContentEntry entry: rootModel.getContentEntries()) {
+                for(SourceFolder srcFolder: entry.getSourceFolders()) {
+                    entry.removeSourceFolder(srcFolder);
                 }
-            });
-        }
-    }
+                entry.addSourceFolder(contentRoot.findFileByRelativePath("src/main/java"), false);
+            }
 
-    private void createDirectoryStructure(VirtualFile contentRoot, ModifiableRootModel model, Project project) {
-        // generate the files based on the template name
-        Templater templater = new Templater(templateName);
-        templater.appId(appId);
-        templater.appName(appName);
-        templater.executable(appName);
-        templater.mainClass(mainClassName);
-        templater.packageName(packageName);
-        templater.buildProject(new File(contentRoot.getCanonicalPath()));
-
-        for(ContentEntry entry: model.getContentEntries()) {
-            model.removeContentEntry(entry);
+            // FIXME add run configurations
         }
-        // FIXME add RoboVM run configuration
-        // addRunConfiguration(facet, myTargetSelectionMode, myPreferredAvd);
     }
 
 //    private void addRunConfiguration(@NotNull AndroidFacet facet,
@@ -129,10 +120,6 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
 //        runManager.setActiveConfiguration(settings);
 //    }
 
-    public void setProjectType(ProjectType projectType) {
-        this.projectType = projectType;
-    }
-
     public void setApplicationId(String applicationId) {
         this.appId = applicationId;
     }
@@ -149,12 +136,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         this.mainClassName = mainClassName;
     }
 
-    public void setSdk(Sdk sdk) {
-        mySdk = sdk;
-    }
-
     public ModuleType getModuleType() {
-        // FIXME RoboVM module type
         return StdModuleTypes.JAVA;
     }
 

@@ -18,7 +18,7 @@ package org.robovm.idea.components;
 
 import com.intellij.openapi.components.ApplicationComponent;
 import org.jetbrains.annotations.NotNull;
-import org.robovm.idea.RoboVmPluginUtils;
+import org.robovm.idea.RoboVmPlugin;
 
 /**
  * Call on app startup, responsible for extracting/updating the
@@ -27,7 +27,7 @@ import org.robovm.idea.RoboVmPluginUtils;
 public class RoboVmApplicationComponent implements ApplicationComponent {
     @Override
     public void initComponent() {
-        RoboVmPluginUtils.extractSdk();
+        RoboVmPlugin.extractSdk();
     }
 
     @Override

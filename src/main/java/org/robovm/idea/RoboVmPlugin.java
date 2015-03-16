@@ -19,7 +19,13 @@ package org.robovm.idea;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.openapi.application.Application;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.JavaSdk;
+import com.intellij.openapi.projectRoots.JavaSdkVersion;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -30,15 +36,18 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.log.Logger;
+import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 
 /**
  * Provides util for the other components of the plugin such
  * as logging.
  */
-public class RoboVmPluginUtils {
+public class RoboVmPlugin {
     private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
     static volatile Project project;
     static volatile ConsoleView consoleView;
@@ -73,7 +82,7 @@ public class RoboVmPluginUtils {
                     } else {
                         System.out.print(s);
                     }
-                    synchronized(RoboVmPluginUtils.class) {
+                    synchronized(RoboVmPlugin.class) {
                         FileWriter writer = null;
                         try {
                             writer = new FileWriter(new File(getSdkHome(), "log.txt"), true);
@@ -116,7 +125,7 @@ public class RoboVmPluginUtils {
 
     public static void initializeProject(final Project project) {
         // store the project, we may need it later
-        RoboVmPluginUtils.project = project;
+        RoboVmPlugin.project = project;
 
         // initialize our tool window to which we
         // log all messages
@@ -144,7 +153,7 @@ public class RoboVmPluginUtils {
     }
 
     public static void extractSdk() {
-        File sdkHome = getSdkHome();
+        File sdkHome = getSdkHomeBase();
         if(!sdkHome.exists()) {
             if (!sdkHome.mkdirs()) {
                 logError("Couldn't create sdk dir in %s", sdkHome.getAbsolutePath());
@@ -156,19 +165,25 @@ public class RoboVmPluginUtils {
                 extractArchive("robovm-dist", sdkHome);
             }
         }
+
+        // create an SDK if it doesn't exist yet
+        RoboVmSdkType.createSdkIfNotExists();
     }
 
     public static File getSdkHome() {
-        File cacheDir = new File(System.getProperty("user.home"), ".robovm-sdks");
-        File sdkHome = new File(cacheDir, "robovm-" + Version.getVersion());
+        File sdkHome = new File(getSdkHomeBase(), "robovm-" + Version.getVersion());
         return sdkHome;
+    }
+
+    public static File getSdkHomeBase() {
+        return new File(System.getProperty("user.home"), ".robovm-sdks");
     }
 
     private static void extractArchive(String archive, File dest) {
         archive = "/" + archive;
         TarArchiveInputStream in = null;
         try {
-            in = new TarArchiveInputStream(new GZIPInputStream(RoboVmPluginUtils.class.getResourceAsStream(archive)));
+            in = new TarArchiveInputStream(new GZIPInputStream(RoboVmPlugin.class.getResourceAsStream(archive)));
             ArchiveEntry entry = null;
             while ((entry = in.getNextEntry()) != null) {
                 File f = new File(dest, entry.getName());
@@ -192,5 +207,19 @@ public class RoboVmPluginUtils {
         } finally {
             IOUtils.closeQuietly(in);
         }
+    }
+
+    public static List<File> getSdkLibraries() {
+        List<File> libs = new ArrayList<File>();
+        File libsDir = new File(getSdkHome(), "lib");
+        for(File file: libsDir.listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                return name.endsWith(".jar");
+            }
+        })) {
+            libs.add(file);
+        }
+        return libs;
     }
 }

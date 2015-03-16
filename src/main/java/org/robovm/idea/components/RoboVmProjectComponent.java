@@ -19,10 +19,10 @@ package org.robovm.idea.components;
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
-import org.robovm.idea.RoboVmPluginUtils;
+import org.robovm.idea.RoboVmPlugin;
 
 /**
- * Used to setup the {@link org.robovm.idea.RoboVmPluginUtils} whenever
+ * Used to setup the {@link org.robovm.idea.RoboVmPlugin} whenever
  * a project is opened.
  */
 public class RoboVmProjectComponent implements ProjectComponent {
@@ -44,10 +44,10 @@ public class RoboVmProjectComponent implements ProjectComponent {
     }
 
     public void projectOpened() {
-        RoboVmPluginUtils.initializeProject(project);
+        RoboVmPlugin.initializeProject(project);
     }
 
     public void projectClosed() {
-        RoboVmPluginUtils.unregisterProject(project);
+        RoboVmPlugin.unregisterProject(project);
     }
 }

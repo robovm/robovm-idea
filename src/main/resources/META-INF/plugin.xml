@@ -17,6 +17,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <projectTemplatesFactory implementation="org.robovm.idea.builder.RoboVmTemplatesFactory"/>
+        <sdkType implementation="org.robovm.idea.sdk.RoboVmSdkType"/>
     </extensions>
 
     <application-components>

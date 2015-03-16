@@ -139,6 +139,7 @@ public class RoboVmPlugin {
                 consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
                 Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "RoboVM Console", true);
                 toolWindow.getContentManager().addContent(content);
+                toolWindow.setIcon(RoboVmIcons.ROBOVM_SMALL);
                 logInfo("RoboVM plugin initialized");
             }
         });

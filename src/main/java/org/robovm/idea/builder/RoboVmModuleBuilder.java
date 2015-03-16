@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea;
+package org.robovm.idea.builder;
 
 import com.intellij.ide.util.projectWizard.*;
 import com.intellij.openapi.application.ApplicationManager;
@@ -24,11 +24,15 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectType;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ContentEntry;
 import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.startup.StartupManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jetbrains.annotations.Nullable;
+import org.robovm.templater.Templater;
+
+import java.io.File;
 
 /**
  * Creates all the files for a new project/module using the templater.
@@ -66,7 +70,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                         public void run() {
                             ApplicationManager.getApplication().runWriteAction(new Runnable() {
                                 public void run() {
-                                    createDirectoryStructure(contentRoot, project);
+                                    createDirectoryStructure(contentRoot, rootModel, project);
                                 }
                             });
                         }
@@ -76,8 +80,19 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         }
     }
 
-    private void createDirectoryStructure(VirtualFile contentRoot, Project project) {
-        // FIXME invoke templater
+    private void createDirectoryStructure(VirtualFile contentRoot, ModifiableRootModel model, Project project) {
+        // generate the files based on the template name
+        Templater templater = new Templater(templateName);
+        templater.appId(appId);
+        templater.appName(appName);
+        templater.executable(appName);
+        templater.mainClass(mainClassName);
+        templater.packageName(packageName);
+        templater.buildProject(new File(contentRoot.getCanonicalPath()));
+
+        for(ContentEntry entry: model.getContentEntries()) {
+            model.removeContentEntry(entry);
+        }
         // FIXME add RoboVM run configuration
         // addRunConfiguration(facet, myTargetSelectionMode, myPreferredAvd);
     }

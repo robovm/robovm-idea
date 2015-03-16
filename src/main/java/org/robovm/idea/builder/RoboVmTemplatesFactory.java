@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea;
+package org.robovm.idea.builder;
 
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleBuilder;
@@ -24,13 +24,14 @@ import com.intellij.platform.ProjectTemplatesFactory;
 import com.intellij.platform.templates.BuilderBasedTemplate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.robovm.idea.RoboVmIcons;
 
 import javax.swing.*;
 
 /**
  * Returns a project template for every template known
  * by the templater. If a user selects one of the templates
- * it's build with the {@link org.robovm.idea.RoboVmModuleBuilder}
+ * it's build with the {@link RoboVmModuleBuilder}
  *
  */
 public class RoboVmTemplatesFactory extends ProjectTemplatesFactory {

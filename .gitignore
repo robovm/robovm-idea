@@ -1,3 +1,4 @@
 target
 .idea
 org.robovm.idea.iml
+src/main/resources/robovm-dist

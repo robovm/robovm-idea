@@ -13,39 +13,24 @@
     ]]>
     </change-notes>
 
-    <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Build+Number+Ranges for description -->
     <idea-version since-build="131"/>
 
-    <!-- please see http://confluence.jetbrains.com/display/IDEADEV/Plugin+Compatibility+with+IntelliJ+Platform+Products
-         on how to target different products -->
-    <!-- uncomment to enable plugin in all products
-    <depends>com.intellij.modules.lang</depends>
-    -->
-
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Run configuration -->
-        <!--<configurationType implementation="org.robovm.intellij.runconf.RoboVMConfigurationType" />-->
-
-        <!-- Run configuration runner -->
-        <!--<programRunner implementation="org.robovm.intellij.runconf.RoboVMRunner"/>-->
-        <projectTemplatesFactory implementation="org.robovm.idea.RoboVmTemplatesFactory"/>
+        <projectTemplatesFactory implementation="org.robovm.idea.builder.RoboVmTemplatesFactory"/>
     </extensions>
 
-
     <application-components>
+        <component>
+            <implementation-class>org.robovm.idea.components.RoboVmApplicationComponent</implementation-class>
+        </component>
     </application-components>
 
     <project-components>
-
-        <!-- Add your project components here -->
         <component>
-            <implementation-class>org.robovm.idea.RoboVmProjectComponent</implementation-class>
+            <implementation-class>org.robovm.idea.components.RoboVmProjectComponent</implementation-class>
         </component>
     </project-components>
 
-
-
-    <!--<depends>org.jetbrains.plugins.gradle</depends>-->
     <actions>
         <group id="org.robovm.idea.Menu" text="RoboVM" description="RoboVM Menu">
             <add-to-group group-id="MainMenu" anchor="last"  />

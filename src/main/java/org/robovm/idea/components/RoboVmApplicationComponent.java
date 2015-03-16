@@ -14,39 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea;
+package org.robovm.idea.components;
 
-import com.intellij.openapi.components.ProjectComponent;
-import com.intellij.openapi.project.Project;
+import com.intellij.openapi.components.ApplicationComponent;
 import org.jetbrains.annotations.NotNull;
+import org.robovm.idea.RoboVmPluginUtils;
 
 /**
- * Used to setup the {@link org.robovm.idea.RoboVmPluginUtils} whenever
- * a project is opened.
+ * Call on app startup, responsible for extracting/updating the
+ * RoboVM SDK and setting up the SDK so its available in IDEA.
  */
-public class RoboVmProjectComponent implements ProjectComponent {
-    private final Project project;
-
-    public RoboVmProjectComponent(Project project) {
-        this.project = project;
-    }
-
+public class RoboVmApplicationComponent implements ApplicationComponent {
+    @Override
     public void initComponent() {
+        RoboVmPluginUtils.extractSdk();
     }
 
+    @Override
     public void disposeComponent() {
     }
 
     @NotNull
+    @Override
     public String getComponentName() {
-        return "org.robovm.idea.RoboVmProjectComponent";
-    }
-
-    public void projectOpened() {
-        RoboVmPluginUtils.initializeProject(project);
-    }
-
-    public void projectClosed() {
-        RoboVmPluginUtils.unregisterProject(project);
+        return "org.robovm.idea.components.RoboVmApplicationComponent";
     }
 }

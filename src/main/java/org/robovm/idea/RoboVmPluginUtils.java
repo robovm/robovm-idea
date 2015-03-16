@@ -25,7 +25,14 @@ import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.util.ui.UIUtil;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.IOUtils;
+import org.robovm.compiler.Version;
 import org.robovm.compiler.log.Logger;
+
+import java.io.*;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Provides util for the other components of the plugin such
@@ -60,6 +67,24 @@ public class RoboVmPluginUtils {
             public void run() {
                 if(consoleView != null) {
                     consoleView.print(s, type);
+                } else {
+                    if(type == ConsoleViewContentType.ERROR_OUTPUT) {
+                        System.err.print(s);
+                    } else {
+                        System.out.print(s);
+                    }
+                    synchronized(RoboVmPluginUtils.class) {
+                        FileWriter writer = null;
+                        try {
+                            writer = new FileWriter(new File(getSdkHome(), "log.txt"), true);
+                            writer.write(s);
+                            writer.flush();
+                            writer.close();
+                        } catch (IOException e) {
+                        } finally {
+                            IOUtils.closeQuietly(writer);
+                        }
+                    }
                 }
             }
         });
@@ -116,5 +141,56 @@ public class RoboVmPluginUtils {
         }
         consoleView = null;
         ToolWindowManager.getInstance(project).unregisterToolWindow(ROBOVM_TOOLWINDOW_ID);
+    }
+
+    public static void extractSdk() {
+        File sdkHome = getSdkHome();
+        if(!sdkHome.exists()) {
+            if (!sdkHome.mkdirs()) {
+                logError("Couldn't create sdk dir in %s", sdkHome.getAbsolutePath());
+                throw new RuntimeException("Couldn't create sdk dir in " + sdkHome.getAbsolutePath());
+            }
+            extractArchive("robovm-dist", sdkHome);
+        } else {
+            if(Version.getVersion().contains("SNAPSHOT")) {
+                extractArchive("robovm-dist", sdkHome);
+            }
+        }
+    }
+
+    public static File getSdkHome() {
+        File cacheDir = new File(System.getProperty("user.home"), ".robovm-sdks");
+        File sdkHome = new File(cacheDir, "robovm-" + Version.getVersion());
+        return sdkHome;
+    }
+
+    private static void extractArchive(String archive, File dest) {
+        archive = "/" + archive;
+        TarArchiveInputStream in = null;
+        try {
+            in = new TarArchiveInputStream(new GZIPInputStream(RoboVmPluginUtils.class.getResourceAsStream(archive)));
+            ArchiveEntry entry = null;
+            while ((entry = in.getNextEntry()) != null) {
+                File f = new File(dest, entry.getName());
+                if (entry.isDirectory()) {
+                    f.mkdirs();
+                } else {
+                    f.getParentFile().mkdirs();
+                    OutputStream out = null;
+                    try {
+                        out = new FileOutputStream(f);
+                        IOUtils.copy(in, out);
+                    } finally {
+                        IOUtils.closeQuietly(out);
+                    }
+                }
+            }
+            logInfo("Installed RoboVM SDK %s to %s", Version.getVersion(), dest.getAbsolutePath());
+        } catch (Throwable t) {
+            logError("Couldn't extract SDK to %s", dest.getAbsolutePath());
+            throw new RuntimeException("Couldn't extract SDK to " + dest.getAbsolutePath(), t);
+        } finally {
+            IOUtils.closeQuietly(in);
+        }
     }
 }

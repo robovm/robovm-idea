@@ -21,11 +21,14 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.JavaSdkVersion;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -35,11 +38,13 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.robovm.compiler.Version;
+import org.robovm.compiler.config.Config;
 import org.robovm.compiler.log.Logger;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -202,6 +207,11 @@ public class RoboVmPlugin {
                 }
             }
             logInfo("Installed RoboVM SDK %s to %s", Version.getVersion(), dest.getAbsolutePath());
+
+            // make all files in bin executable
+            for(File file: new File(getSdkHome(), "bin").listFiles()) {
+                file.setExecutable(true);
+            }
         } catch (Throwable t) {
             logError("Couldn't extract SDK to %s", dest.getAbsolutePath());
             throw new RuntimeException("Couldn't extract SDK to " + dest.getAbsolutePath(), t);
@@ -222,5 +232,20 @@ public class RoboVmPlugin {
             libs.add(file);
         }
         return libs;
+    }
+
+    public static Config.Home getRoboVmHome() {
+        return new Config.Home(getSdkHome());
+    }
+
+    public static Collection<Module> getRoboVmModules(Project project) {
+        List<Module> validModules = new ArrayList<Module>();
+        for(Module module: ModuleManager.getInstance(project).getModules()) {
+            // HACK! to identify if the module uses a robovm sdk
+            if(ModuleRootManager.getInstance(module).getSdk().getSdkType().getName().toLowerCase().contains("robovm")) {
+                validModules.add(module);
+            }
+        }
+        return validModules;
     }
 }

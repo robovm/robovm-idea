@@ -16,6 +16,8 @@
     <idea-version since-build="131"/>
 
     <extensions defaultExtensionNs="com.intellij">
+        <configurationType implementation="org.robovm.idea.running.RoboVmConfigurationType"/>
+        <programRunner implementation="org.robovm.idea.running.RoboVmRunner"/>
         <projectTemplatesFactory implementation="org.robovm.idea.builder.RoboVmTemplatesFactory"/>
         <sdkType implementation="org.robovm.idea.sdk.RoboVmSdkType"/>
     </extensions>

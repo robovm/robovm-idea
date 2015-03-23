@@ -18,9 +18,11 @@ package org.robovm.idea.running;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configuration.EmptyRunProfileState;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
@@ -33,7 +35,9 @@ import com.intellij.openapi.util.WriteExternalException;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Config;
 import org.robovm.idea.RoboVmIcons;
 import org.robovm.idea.RoboVmPlugin;
 
@@ -42,13 +46,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunConfigurationSettings>  {
+public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunConfigurationSettings> implements RunConfigurationWithSuppressedDefaultDebugAction, RunConfigurationWithSuppressedDefaultRunAction, RunProfileWithCompileBeforeLaunchOption {
     private boolean deviceConfiguration;
     private Arch deviceArch;
     private String signingIdentity;
     private String provisioningProfile;
     private Arch simArch;
     private String simulatorName;
+    private String moduleName;
+
+    // these are used to pass information between
+    // the compiler, the run configuration and the
+    // runner. They are not persisted.
+    private boolean isDebug;
+    private Config config;
+    private int debugPort;
+    private AppCompiler compiler;
 
     public RoboVmRunConfiguration(String name, RoboVmRunConfigurationSettings configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
@@ -68,13 +81,14 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     @Nullable
     @Override
     public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) throws ExecutionException {
-        return null;
+        return new RoboVmRunProfileState(environment);
     }
 
     @Override
     public void readExternal(Element element) throws InvalidDataException {
         super.readExternal(element);
 
+        String moduleName = JDOMExternalizerUtil.readField(element, "moduleName");
         deviceConfiguration = Boolean.parseBoolean(JDOMExternalizerUtil.readField(element, "isDeviceConfig"));
         String deviceArchStr = JDOMExternalizerUtil.readField(element, "deviceArch");
         deviceArch = deviceArchStr.length() == 0? null: Arch.valueOf(deviceArchStr);
@@ -89,6 +103,7 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     public void writeExternal(Element element) throws WriteExternalException {
         super.writeExternal(element);
 
+        JDOMExternalizerUtil.writeField(element, "moduleName", moduleName);
         JDOMExternalizerUtil.writeField(element, "isDeviceConfig", Boolean.toString(deviceConfiguration));
         JDOMExternalizerUtil.writeField(element, "deviceArch", deviceArch == null? null: deviceArch.toString());
         JDOMExternalizerUtil.writeField(element, "signingIdentity", signingIdentity);
@@ -143,5 +158,45 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
 
     public String getSimulatorName() {
         return simulatorName;
+    }
+
+    public void setModuleName(String moduleName) {
+        this.moduleName = moduleName;
+    }
+
+    public String getModuleName() {
+        return moduleName;
+    }
+
+    public boolean isDebug() {
+        return isDebug;
+    }
+
+    public void setDebug(boolean isDebug) {
+        this.isDebug = isDebug;
+    }
+
+    public Config getConfig() {
+        return config;
+    }
+
+    public void setConfig(Config config) {
+        this.config = config;
+    }
+
+    public void setDebugPort(int debugPort) {
+        this.debugPort = debugPort;
+    }
+
+    public int getDebugPort() {
+        return debugPort;
+    }
+
+    public void setCompiler(AppCompiler compiler) {
+        this.compiler = compiler;
+    }
+
+    public AppCompiler getCompiler() {
+        return compiler;
     }
 }

@@ -13,6 +13,9 @@ import org.robovm.idea.RoboVmPlugin;
 import javax.swing.*;
 
 public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmRunConfiguration> {
+    public static final String SKIP_SIGNING = "Don't sign";
+    public static final String AUTO_SIGNING_IDENTITY = "Auto (matches 'iPhone Developer|iOS Development')";
+    public static final String AUTO_PROVISIONING_PROFILE = "Auto";
     private JPanel panel;
     private JTabbedPane tabbedPane1;
     private JComboBox module;
@@ -31,7 +34,7 @@ public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmR
 
     @Override
     protected void applyEditorTo(RoboVmRunConfiguration config) throws ConfigurationException {
-        config.setModule(((Module)module.getSelectedItem()));
+        config.setModuleName(module.getSelectedItem().toString());
         config.setDeviceConfiguration(attachedDeviceRadioButton.isSelected());
         config.setDeviceArch((Arch) deviceArch.getSelectedItem());
         config.setSigningIdentity(signingIdentity.getSelectedItem().toString());
@@ -50,8 +53,8 @@ public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmR
         // populate with RoboVM Sdk modules
         this.module.removeAllItems();
         for(Module module: RoboVmPlugin.getRoboVmModules(config.getProject())) {
-            this.module.addItem(module);
-            if(module.getName().equals(config.getConfigurationModule().getModuleName())) {
+            this.module.addItem(module.getName());
+            if(module.getName().equals(config.getModuleName())) {
                 this.module.setSelectedIndex(this.module.getItemCount() - 1);
             }
         }
@@ -86,8 +89,8 @@ public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmR
 
         // populate signing identities
         signingIdentity.removeAllItems();
-        signingIdentity.addItem("Auto (matches 'iPhone Developer|iOS Development')");
-        signingIdentity.addItem("Don't sign");
+        signingIdentity.addItem(AUTO_SIGNING_IDENTITY);
+        signingIdentity.addItem(SKIP_SIGNING);
         for(SigningIdentity identity: SigningIdentity.list()) {
             signingIdentity.addItem(identity.getName());
             if(identity.getName().equals(config.getSigningIdentity())) {
@@ -97,7 +100,7 @@ public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmR
 
         // populate provisioning profiles
         provisioningProfile.removeAllItems();
-        provisioningProfile.addItem("Auto");
+        provisioningProfile.addItem(AUTO_PROVISIONING_PROFILE);
         for(ProvisioningProfile profile: ProvisioningProfile.list()) {
             provisioningProfile.addItem(profile.getName());
             if(profile.getName().equals(config.getProvisioningProfile())) {

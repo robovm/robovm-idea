@@ -18,15 +18,30 @@ package org.robovm.idea.running;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
-import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.GenericProgramRunner;
 import com.intellij.execution.runners.ProgramRunner;
-import com.intellij.openapi.options.SettingsEditor;
+import com.intellij.execution.runners.RunContentBuilder;
+import com.intellij.execution.ui.RunContentDescriptor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.robovm.compiler.AppCompiler;
+import org.robovm.compiler.config.Config;
+import org.robovm.compiler.target.LaunchParameters;
+import org.robovm.compiler.util.io.Fifos;
+import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
+import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.compilation.RoboVmCompileTask;
 
-public class RoboVmRunner implements ProgramRunner {
+import java.io.*;
+
+public class RoboVmRunner extends GenericProgramRunner {
+
+    public static final String DEBUG_EXECUTOR = "Debug";
+    public static final String RUN_EXECUTOR = "Run";
+
     @NotNull
     @Override
     public String getRunnerId() {
@@ -35,38 +50,25 @@ public class RoboVmRunner implements ProgramRunner {
 
     @Override
     public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-        return executorId.equals("Debug") || executorId.equals("Run");
+        return (executorId.equals(DEBUG_EXECUTOR) || executorId.equals(RUN_EXECUTOR)) && profile instanceof RoboVmRunConfiguration;
+    }
+
+    @Override
+    protected void execute(@NotNull ExecutionEnvironment environment, @Nullable Callback callback, @NotNull RunProfileState state) throws ExecutionException {
+        // we need to pass the run profile info to the compiler so
+        // we can decide if this is a debug or release build
+        RoboVmRunConfiguration runConfig = (RoboVmRunConfiguration)environment.getRunnerAndConfigurationSettings().getConfiguration();
+        runConfig.setDebug(DEBUG_EXECUTOR.equals(environment.getExecutor().getId()));
+        super.execute(environment, callback, state);
     }
 
     @Nullable
     @Override
-    public RunnerSettings createConfigurationData(ConfigurationInfoProvider settingsProvider) {
-        return null;
-    }
-
-    @Override
-    public void checkConfiguration(RunnerSettings settings, @Nullable ConfigurationPerRunnerSettings configurationPerRunnerSettings) throws RuntimeConfigurationException {
-
-    }
-
-    @Override
-    public void onProcessStarted(RunnerSettings settings, ExecutionResult executionResult) {
-
-    }
-
-    @Nullable
-    @Override
-    public SettingsEditor getSettingsEditor(Executor executor, RunConfiguration configuration) {
-        return null;
-    }
-
-    @Override
-    public void execute(@NotNull ExecutionEnvironment environment) throws ExecutionException {
-
-    }
-
-    @Override
-    public void execute(@NotNull ExecutionEnvironment environment, @Nullable Callback callback) throws ExecutionException {
-
+    protected RunContentDescriptor doExecute(@NotNull RunProfileState state, @NotNull ExecutionEnvironment environment) throws ExecutionException {
+        ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
+        if (executionResult == null) {
+            return null;
+        }
+        return new RunContentBuilder(executionResult, environment).showRunContent(environment.getContentToReuse());
     }
 }

@@ -85,10 +85,15 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     }
 
     @Override
+    public ModuleBasedConfiguration clone() {
+        return super.clone();
+    }
+
+    @Override
     public void readExternal(Element element) throws InvalidDataException {
         super.readExternal(element);
 
-        String moduleName = JDOMExternalizerUtil.readField(element, "moduleName");
+        moduleName = JDOMExternalizerUtil.readField(element, "moduleName");
         deviceConfiguration = Boolean.parseBoolean(JDOMExternalizerUtil.readField(element, "isDeviceConfig"));
         String deviceArchStr = JDOMExternalizerUtil.readField(element, "deviceArch");
         deviceArch = deviceArchStr.length() == 0? null: Arch.valueOf(deviceArchStr);

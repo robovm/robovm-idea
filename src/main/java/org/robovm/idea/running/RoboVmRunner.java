@@ -80,15 +80,16 @@ public class RoboVmRunner extends GenericProgramRunner {
     @Nullable
     @Override
     protected RunContentDescriptor doExecute(@NotNull RunProfileState state, @NotNull ExecutionEnvironment environment) throws ExecutionException {
-       ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
-        if (executionResult == null) {
-            return null;
-        }
         if(DEBUG_EXECUTOR.equals(environment.getExecutor().getId())) {
             RoboVmRunConfiguration runConfig = (RoboVmRunConfiguration)environment.getRunProfile();
             RemoteConnection connection = new RemoteConnection(true, "127.0.0.1", "" + runConfig.getDebugPort(), false);
+            connection.setServerMode(true);
             return attachVirtualMachine(state, environment, connection, false);
         } else {
+            ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
+            if (executionResult == null) {
+                return null;
+            }
             return new RunContentBuilder(executionResult, environment).showRunContent(environment.getContentToReuse());
         }
     }

@@ -114,7 +114,8 @@ public class RoboVmCompileTask implements CompileTask {
 
             // setup classpath entries, debug build parameters and target
             // parameters, e.g. signing identity etc.
-            configureClassAndSourcepaths(context, module, builder, runConfig);
+            Set<File> bc = configureClassAndSourcepaths(context, builder, runConfig, module);
+            configureDebugging(builder, runConfig, module, bc);
             configureTarget(builder, runConfig);
 
             // clean build dir
@@ -160,7 +161,7 @@ public class RoboVmCompileTask implements CompileTask {
         return true;
     }
 
-    private void configureClassAndSourcepaths(CompileContext context, Module module, Config.Builder builder, RoboVmRunConfiguration runConfig) {
+    private Set<File> configureClassAndSourcepaths(CompileContext context, Config.Builder builder, RoboVmRunConfiguration runConfig, Module module) {
         // gather the boot and user classpaths. RoboVM RT libs may be
         // specified in a Maven/Gradle build file, in which case they'll
         // turn up as order entries. We filter them out here.
@@ -216,6 +217,10 @@ public class RoboVmCompileTask implements CompileTask {
             }
         }
 
+        return bootClassPaths;
+    }
+
+    private void configureDebugging(Config.Builder builder, RoboVmRunConfiguration runConfig, Module module, Set<File> bootClassPaths) {
         // setup debug configuration if necessary
         if(runConfig.isDebug()) {
             // source paths of dependencies and modules
@@ -244,6 +249,8 @@ public class RoboVmCompileTask implements CompileTask {
             builder.debug(true);
             builder.addPluginArgument("debug:sourcepath=" + b.toString());
             builder.addPluginArgument("debug:jdwpport=" + runConfig.getDebugPort());
+            builder.addPluginArgument("debug:clientmode=true");
+            builder.addPluginArgument("debug:logconsole=true");
         }
     }
 

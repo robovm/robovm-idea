@@ -201,7 +201,7 @@ public class RoboVmPlugin {
             extractArchive("robovm-dist", sdkHome);
         } else {
             if (Version.getVersion().contains("SNAPSHOT")) {
-                extractArchive("robovm-dist", sdkHome);
+                //extractArchive("robovm-dist", sdkHome);
             }
         }
 

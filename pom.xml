@@ -145,7 +145,7 @@
                                         <include name="src/main/resources" />
                                     </dirset>
                                 </path>
-                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}" extdirs="${idea.home}">
+                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}" extdirs="${idea.home}/lib">
                                     <classpath refid="maven.compile.classpath" />
                                     <src refid="sourcepath" />
                                 </instrumentIdeaExtensions>

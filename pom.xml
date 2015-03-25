@@ -12,7 +12,7 @@
     <properties>
         <robovm.version>${project.version}</robovm.version>
         <ij.plugin>true</ij.plugin>
-        <idea.home>/Applications/IntelliJ IDEA 14 CE.app/Contents/lib</idea.home>
+        <idea.home>/Applications/IntelliJ IDEA 14 CE.app/Contents/</idea.home>
     </properties>
 
     <dependencies>
@@ -115,7 +115,7 @@
                     <optimize>true</optimize>
                     <encoding>UTF-8</encoding>
                     <compilerArguments>
-                        <extdirs>${idea.home}</extdirs>
+                        <extdirs>${idea.home}/lib</extdirs>
                     </compilerArguments>
                 </configuration>
             </plugin>

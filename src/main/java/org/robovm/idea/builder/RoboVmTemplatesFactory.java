@@ -60,7 +60,8 @@ public class RoboVmTemplatesFactory extends ProjectTemplatesFactory {
     @Override
     public ProjectTemplate[] createTemplates(String group, WizardContext context) {
         return new ProjectTemplate[] {
-            new RoboVmProjectTemplate("RoboVM iOS App", "A basic single view app", new RoboVmModuleBuilder("default"))
+            new RoboVmProjectTemplate("RoboVM iOS App", "A basic single view app", new RoboVmModuleBuilder("default")),
+            new RoboVmProjectTemplate("RoboVM Console App", "A console app for Mac OS X or Linux", new RoboVmModuleBuilder("console"))
         };
     }
 

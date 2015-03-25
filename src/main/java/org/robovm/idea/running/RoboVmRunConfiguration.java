@@ -18,17 +18,11 @@ package org.robovm.idea.running;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
-import com.intellij.execution.configuration.EmptyRunProfileState;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.options.SettingsEditor;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizerUtil;
 import com.intellij.openapi.util.WriteExternalException;
@@ -38,16 +32,18 @@ import org.jetbrains.annotations.Nullable;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
-import org.robovm.idea.RoboVmIcons;
 import org.robovm.idea.RoboVmPlugin;
 
-import javax.swing.*;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunConfigurationSettings> implements RunConfigurationWithSuppressedDefaultDebugAction, RunConfigurationWithSuppressedDefaultRunAction, RunProfileWithCompileBeforeLaunchOption {
-    private boolean deviceConfiguration;
+    public static enum TargetType {
+        Simulator,
+        Device,
+        Console
+    }
+
+    private TargetType targetType;
     private Arch deviceArch;
     private String signingIdentity;
     private String provisioningProfile;
@@ -62,9 +58,11 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     private Config config;
     private int debugPort;
     private AppCompiler compiler;
+    private ConfigurationType type;
 
-    public RoboVmRunConfiguration(String name, RoboVmRunConfigurationSettings configurationModule, ConfigurationFactory factory) {
+    public RoboVmRunConfiguration(ConfigurationType type, String name, RoboVmRunConfigurationSettings configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
+        this.type = type;
     }
 
     @Override
@@ -75,7 +73,11 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     @NotNull
     @Override
     public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-        return new RoboVmRunConfigurationSettingsEditor();
+        if(type instanceof RoboVmIOSConfigurationType) {
+            return new RoboVmIOSRunConfigurationSettingsEditor();
+        } else {
+            return new RoboVmConsoleRunConfigurationSettingsEditor();
+        }
     }
 
     @Nullable
@@ -94,7 +96,8 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
         super.readExternal(element);
 
         moduleName = JDOMExternalizerUtil.readField(element, "moduleName");
-        deviceConfiguration = Boolean.parseBoolean(JDOMExternalizerUtil.readField(element, "isDeviceConfig"));
+        String targetTypeStr = JDOMExternalizerUtil.readField(element, "targetType");
+        targetType = targetTypeStr.length() == 0? null: TargetType.valueOf(targetTypeStr);
         String deviceArchStr = JDOMExternalizerUtil.readField(element, "deviceArch");
         deviceArch = deviceArchStr.length() == 0? null: Arch.valueOf(deviceArchStr);
         signingIdentity = JDOMExternalizerUtil.readField(element, "signingIdentity");
@@ -109,20 +112,12 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
         super.writeExternal(element);
 
         JDOMExternalizerUtil.writeField(element, "moduleName", moduleName);
-        JDOMExternalizerUtil.writeField(element, "isDeviceConfig", Boolean.toString(deviceConfiguration));
+        JDOMExternalizerUtil.writeField(element, "targetType", targetType == null? null: targetType.toString());
         JDOMExternalizerUtil.writeField(element, "deviceArch", deviceArch == null? null: deviceArch.toString());
         JDOMExternalizerUtil.writeField(element, "signingIdentity", signingIdentity);
         JDOMExternalizerUtil.writeField(element, "provisioningProfile", provisioningProfile);
         JDOMExternalizerUtil.writeField(element, "simArch", simArch == null? null: simArch.toString());
         JDOMExternalizerUtil.writeField(element, "simulatorName", simulatorName);
-    }
-
-    public void setDeviceConfiguration(boolean deviceConfiguration) {
-        this.deviceConfiguration = deviceConfiguration;
-    }
-
-    public boolean isDeviceConfiguration() {
-        return deviceConfiguration;
     }
 
     public void setDeviceArch(Arch deviceArch) {
@@ -203,5 +198,13 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
 
     public AppCompiler getCompiler() {
         return compiler;
+    }
+
+    public TargetType getTargetType() {
+        return targetType;
+    }
+
+    public void setTargetType(TargetType targetType) {
+        this.targetType = targetType;
     }
 }

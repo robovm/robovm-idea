@@ -28,6 +28,6 @@ public class RoboVmConfigurationFactory extends ConfigurationFactory {
 
     @Override
     public RunConfiguration createTemplateConfiguration(Project project) {
-        return new RoboVmRunConfiguration("RoboVM Run Configuration", new RoboVmRunConfigurationSettings(project), this);
+        return new RoboVmRunConfiguration(getType(), "RoboVM Run Configuration", new RoboVmRunConfigurationSettings(project), this);
     }
 }

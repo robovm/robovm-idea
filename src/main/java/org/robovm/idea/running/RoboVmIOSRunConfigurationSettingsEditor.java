@@ -12,7 +12,7 @@ import org.robovm.idea.RoboVmPlugin;
 
 import javax.swing.*;
 
-public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmRunConfiguration> {
+public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<RoboVmRunConfiguration> {
     public static final String SKIP_SIGNING = "Don't sign";
     public static final String AUTO_SIGNING_IDENTITY = "Auto (matches 'iPhone Developer|iOS Development')";
     public static final String AUTO_PROVISIONING_PROFILE = "Auto";
@@ -35,7 +35,7 @@ public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmR
     @Override
     protected void applyEditorTo(RoboVmRunConfiguration config) throws ConfigurationException {
         config.setModuleName(module.getSelectedItem().toString());
-        config.setDeviceConfiguration(attachedDeviceRadioButton.isSelected());
+        config.setTargetType(attachedDeviceRadioButton.isSelected()? RoboVmRunConfiguration.TargetType.Device: RoboVmRunConfiguration.TargetType.Simulator);
         config.setDeviceArch((Arch) deviceArch.getSelectedItem());
         config.setSigningIdentity(signingIdentity.getSelectedItem().toString());
         config.setProvisioningProfile(provisioningProfile.getSelectedItem().toString());
@@ -59,7 +59,7 @@ public class RoboVmRunConfigurationSettingsEditor extends SettingsEditor<RoboVmR
             }
         }
 
-        attachedDeviceRadioButton.setSelected(config.isDeviceConfiguration());
+        attachedDeviceRadioButton.setSelected(config.getTargetType() == RoboVmRunConfiguration.TargetType.Device);
 
         // populate archs
         simArch.removeAllItems();

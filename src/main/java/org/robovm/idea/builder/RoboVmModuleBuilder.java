@@ -125,7 +125,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
     }
 
     public void setApplicationName(String applicationName) {
-        this.appId = applicationName;
+        this.appName = applicationName;
     }
 
     public void setPackageName(String packageName) {
@@ -143,7 +143,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
     @Nullable
     @Override
     public String getBuilderId() {
-        return this.getClass().getName();
+        return this.getClass().getName() + templateName;
     }
 
     @Override

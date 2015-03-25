@@ -39,7 +39,7 @@ import org.robovm.compiler.target.ios.ProvisioningProfile;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.idea.RoboVmPlugin;
 import org.robovm.idea.running.RoboVmRunConfiguration;
-import org.robovm.idea.running.RoboVmRunConfigurationSettingsEditor;
+import org.robovm.idea.running.RoboVmIOSRunConfigurationSettingsEditor;
 
 import java.io.File;
 import java.io.IOException;
@@ -85,14 +85,22 @@ public class RoboVmCompileTask implements CompileTask {
             File moduleBaseDir = new File(ModuleRootManager.getInstance(module).getContentRoots()[0].getPath());
 
             // load the robovm.xml file
-            // FIXME currently don't support JUnit tests
             loadConfig(builder, moduleBaseDir, false);
 
             // set OS and arch
-            // FIXME currently only support iOS builds.
-            OS os = OS.ios;
-            Arch arch = runConfig.isDeviceConfiguration()? runConfig.getDeviceArch(): runConfig.getSimArch();
-            builder.os(OS.ios);
+            OS os = null;
+            Arch arch = null;
+            if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Device) {
+                os = OS.ios;
+                arch = runConfig.getDeviceArch();
+            } else if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Simulator) {
+                os = OS.ios;
+                arch = runConfig.getSimArch();
+            } else {
+                os = OS.getDefaultOS();
+                arch = Arch.getDefaultArch();
+            }
+            builder.os(os);
             builder.arch(arch);
 
             // set build dir and install dir, pattern
@@ -240,24 +248,27 @@ public class RoboVmCompileTask implements CompileTask {
     }
 
     private void configureTarget(Config.Builder builder, RoboVmRunConfiguration runConfig) {
-        if(runConfig.isDeviceConfiguration()) {
+        if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Device) {
             // configure device build
             builder.targetType(Config.TargetType.ios);
             String signingId = runConfig.getSigningIdentity();
             String profile = runConfig.getProvisioningProfile();
-            if (RoboVmRunConfigurationSettingsEditor.SKIP_SIGNING.equals(signingId)) {
+            if (RoboVmIOSRunConfigurationSettingsEditor.SKIP_SIGNING.equals(signingId)) {
                 builder.iosSkipSigning(true);
             } else {
-                if (signingId != null && !RoboVmRunConfigurationSettingsEditor.AUTO_SIGNING_IDENTITY.equals(signingId)) {
+                if (signingId != null && !RoboVmIOSRunConfigurationSettingsEditor.AUTO_SIGNING_IDENTITY.equals(signingId)) {
                     builder.iosSignIdentity(SigningIdentity.find(SigningIdentity.list(), signingId));
                 }
-                if (profile != null && !RoboVmRunConfigurationSettingsEditor.AUTO_PROVISIONING_PROFILE.equals(profile)) {
+                if (profile != null && !RoboVmIOSRunConfigurationSettingsEditor.AUTO_PROVISIONING_PROFILE.equals(profile)) {
                     builder.iosProvisioningProfile(ProvisioningProfile.find(ProvisioningProfile.list(), profile));
                 }
             }
-        } else {
-            // FIXME add support for junit and console targets
+        } else if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Simulator) {
             builder.targetType(Config.TargetType.ios);
+        } else if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Console) {
+            builder.targetType(Config.TargetType.console);
+        } else {
+            throw new RuntimeException("Unsupported target type: " + runConfig.getTargetType());
         }
     }
 

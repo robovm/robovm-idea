@@ -16,6 +16,16 @@
  */
 package org.robovm.idea.running;
 
+import com.intellij.debugger.DebugEnvironment;
+import com.intellij.debugger.DebuggerManagerEx;
+import com.intellij.debugger.DefaultDebugUIEnvironment;
+import com.intellij.debugger.engine.DebugProcessImpl;
+import com.intellij.debugger.engine.JavaDebugProcess;
+import com.intellij.debugger.impl.DebuggerSession;
+import com.intellij.debugger.impl.GenericDebuggerRunnerSettings;
+import com.intellij.debugger.settings.DebuggerSettings;
+import com.intellij.debugger.ui.tree.render.BatchEvaluator;
+import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.configurations.*;
@@ -25,6 +35,11 @@ import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.runners.RunContentBuilder;
 import com.intellij.execution.ui.RunContentDescriptor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.xdebugger.XDebugProcess;
+import com.intellij.xdebugger.XDebugProcessStarter;
+import com.intellij.xdebugger.XDebugSession;
+import com.intellij.xdebugger.XDebuggerManager;
+import com.intellij.xdebugger.impl.XDebugSessionImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.robovm.compiler.AppCompiler;
@@ -65,10 +80,52 @@ public class RoboVmRunner extends GenericProgramRunner {
     @Nullable
     @Override
     protected RunContentDescriptor doExecute(@NotNull RunProfileState state, @NotNull ExecutionEnvironment environment) throws ExecutionException {
-        ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
+       ExecutionResult executionResult = state.execute(environment.getExecutor(), this);
         if (executionResult == null) {
             return null;
         }
-        return new RunContentBuilder(executionResult, environment).showRunContent(environment.getContentToReuse());
+        if(DEBUG_EXECUTOR.equals(environment.getExecutor().getId())) {
+            RoboVmRunConfiguration runConfig = (RoboVmRunConfiguration)environment.getRunProfile();
+            RemoteConnection connection = new RemoteConnection(true, "127.0.0.1", "" + runConfig.getDebugPort(), false);
+            return attachVirtualMachine(state, environment, connection, false);
+        } else {
+            return new RunContentBuilder(executionResult, environment).showRunContent(environment.getContentToReuse());
+        }
+    }
+
+    @Nullable
+    protected RunContentDescriptor attachVirtualMachine(RunProfileState state,
+                                                        @NotNull ExecutionEnvironment env,
+                                                        RemoteConnection connection,
+                                                        boolean pollConnection) throws ExecutionException {
+        DebugEnvironment environment = new DefaultDebugUIEnvironment(env, state, connection, pollConnection).getEnvironment();
+        final DebuggerSession debuggerSession = DebuggerManagerEx.getInstanceEx(env.getProject()).attachVirtualMachine(environment);
+        if (debuggerSession == null) {
+            return null;
+        }
+
+        final DebugProcessImpl debugProcess = debuggerSession.getProcess();
+        if (debugProcess.isDetached() || debugProcess.isDetaching()) {
+            debuggerSession.dispose();
+            return null;
+        }
+        // optimization: that way BatchEvaluator will not try to lookup the class file in remote VM
+        // which is an expensive operation when executed first time
+        debugProcess.putUserData(BatchEvaluator.REMOTE_SESSION_KEY, Boolean.TRUE);
+
+        return XDebuggerManager.getInstance(env.getProject()).startSession(env, new XDebugProcessStarter() {
+            @Override
+            @NotNull
+            public XDebugProcess start(@NotNull XDebugSession session) {
+                XDebugSessionImpl sessionImpl = (XDebugSessionImpl)session;
+                ExecutionResult executionResult = debugProcess.getExecutionResult();
+                sessionImpl.addExtraActions(executionResult.getActions());
+                if (executionResult instanceof DefaultExecutionResult) {
+                    sessionImpl.addRestartActions(((DefaultExecutionResult)executionResult).getRestartActions());
+                    sessionImpl.addExtraStopActions(((DefaultExecutionResult)executionResult).getAdditionalStopActions());
+                }
+                return JavaDebugProcess.create(session, debuggerSession);
+            }
+        }).getRunContentDescriptor();
     }
 }

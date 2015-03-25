@@ -82,8 +82,39 @@ public class RoboVmRunProfileState extends CommandLineState {
         launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
     }
 
-    protected ProcessHandler executeDebug() {
-        return null;
+    protected ProcessHandler executeDebug() throws Throwable {
+        RoboVmRunConfiguration runConfig = (RoboVmRunConfiguration)getEnvironment().getRunnerAndConfigurationSettings().getConfiguration();
+        Config config = runConfig.getConfig();
+        AppCompiler compiler = runConfig.getCompiler();
+        RoboVmPlugin.logInfo("Launching executable");
+        String mainTypeName = config.getMainClass();
+
+        LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
+        customizeLaunchParameters(runConfig, config, launchParameters);
+
+        // launch plugin may proxy stdout/stderr fifo, which
+        // it then writes to. Need to save the original fifos
+        File stdOutFifo = launchParameters.getStdoutFifo();
+        File stdErrFifo = launchParameters.getStderrFifo();
+        PipedInputStream pipedIn = new PipedInputStream();
+        PipedOutputStream pipedOut = new PipedOutputStream(pipedIn);
+        Process process = compiler.launchAsync(launchParameters, pipedIn);
+        if (stdOutFifo != null || stdErrFifo != null) {
+            InputStream stdoutStream = null;
+            InputStream stderrStream = null;
+            if (launchParameters.getStdoutFifo() != null) {
+                stdoutStream = new OpenOnReadFileInputStream(stdOutFifo);
+            }
+            if (launchParameters.getStderrFifo() != null) {
+                stderrStream = new OpenOnReadFileInputStream(stdErrFifo);
+            }
+            process = new ProcessProxy(process, pipedOut, stdoutStream, stderrStream, compiler);
+        }
+        RoboVmPlugin.logInfo("Launch done");
+
+        final OSProcessHandler processHandler = new ColoredProcessHandler(process, null);
+        ProcessTerminatedListener.attach(processHandler);
+        return processHandler;
     }
 
     @NotNull

@@ -1,6 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.robovm</groupId>
@@ -15,34 +13,68 @@
         <idea.home>/Applications/IntelliJ IDEA 14 CE.app/Contents/</idea.home>
     </properties>
 
+    <profiles>
+        <profile>
+            <id>development</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.robovm</groupId>
+                    <artifactId>robovm-compiler</artifactId>
+                    <version>${robovm.version}</version>                    
+                </dependency>
+                <dependency>
+                    <groupId>com.robovm</groupId>
+                    <artifactId>robovm-debug-info-plugin</artifactId>
+                    <version>${robovm.version}</version>                    
+                </dependency>
+                <dependency>
+                    <groupId>com.robovm</groupId>
+                    <artifactId>robovm-debug-server</artifactId>
+                    <version>${robovm.version}</version>                    
+                </dependency>
+                <dependency>
+                    <groupId>com.robovm</groupId>
+                    <artifactId>robovm-debug-instrument-plugin</artifactId>
+                    <version>${robovm.version}</version>                    
+                </dependency>                
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>deployment</id>
+            <dependencies>                
+                <dependency>
+                    <groupId>org.robovm</groupId>
+                    <artifactId>robovm-dist-compiler</artifactId>
+                    <version>${robovm.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.robovm</groupId>
+                            <artifactId>robovm-rt</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.robovm</groupId>
+                            <artifactId>robovm-objc</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.robovm</groupId>
+                            <artifactId>robovm-cocoatouch</artifactId>
+                        </exclusion>
+                        <exclusion>
+                            <groupId>org.robovm</groupId>
+                            <artifactId>robovm-cacerts-full</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>                
+            </dependencies>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
             <version>1.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.robovm</groupId>
-            <artifactId>robovm-dist-compiler</artifactId>
-            <version>${robovm.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.robovm</groupId>
-                    <artifactId>robovm-rt</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.robovm</groupId>
-                    <artifactId>robovm-objc</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.robovm</groupId>
-                    <artifactId>robovm-cocoatouch</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.robovm</groupId>
-                    <artifactId>robovm-cacerts-full</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.robovm</groupId>
@@ -75,7 +107,6 @@
             <artifactId>robovm-templater</artifactId>
             <version>${robovm.version}</version>
         </dependency>
-
         <!-- Test -->
         <dependency>
             <groupId>junit</groupId>
@@ -133,21 +164,21 @@
                         <configuration>
                             <target>
                                 <path id="maven.plugin.complete.classpath">
-                                    <path refid="maven.plugin.classpath" />
+                                    <path refid="maven.plugin.classpath"/>
                                     <fileset dir="${idea.home}">
                                         <include name="**/*.jar"/>
                                     </fileset>
                                 </path>
-                                <taskdef name="instrumentIdeaExtensions" classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="maven.plugin.complete.classpath" />
+                                <taskdef classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="maven.plugin.complete.classpath" name="instrumentIdeaExtensions"/>
                                 <path id="sourcepath">
                                     <dirset dir="${project.basedir}">
-                                        <include name="src/main/java" />
-                                        <include name="src/main/resources" />
+                                        <include name="src/main/java"/>
+                                        <include name="src/main/resources"/>
                                     </dirset>
                                 </path>
                                 <instrumentIdeaExtensions destdir="${project.build.outputDirectory}" extdirs="${idea.home}/lib">
-                                    <classpath refid="maven.compile.classpath" />
-                                    <src refid="sourcepath" />
+                                    <classpath refid="maven.compile.classpath"/>
+                                    <src refid="sourcepath"/>
                                 </instrumentIdeaExtensions>
                             </target>
                         </configuration>
@@ -213,7 +244,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore />
+                                        <ignore/>
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>
@@ -223,7 +254,6 @@
             </plugins>
         </pluginManagement>
     </build>
-
     <repositories>
         <repository>
             <id>sonatype-snapshots</id>

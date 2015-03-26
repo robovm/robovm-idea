@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.robovm</groupId>
@@ -20,29 +21,34 @@
                 <dependency>
                     <groupId>org.robovm</groupId>
                     <artifactId>robovm-compiler</artifactId>
-                    <version>${robovm.version}</version>                    
+                    <version>${robovm.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.robovm</groupId>
+                    <artifactId>robovm-lm</artifactId>
+                    <version>${robovm.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.robovm</groupId>
                     <artifactId>robovm-debug-info-plugin</artifactId>
-                    <version>${robovm.version}</version>                    
-                </dependency>
-                <dependency>
-                    <groupId>com.robovm</groupId>
-                    <artifactId>robovm-debug-server</artifactId>
-                    <version>${robovm.version}</version>                    
+                    <version>${robovm.version}</version>
                 </dependency>
                 <dependency>
                     <groupId>com.robovm</groupId>
                     <artifactId>robovm-debug-instrument-plugin</artifactId>
-                    <version>${robovm.version}</version>                    
-                </dependency>                
+                    <version>${robovm.version}</version>
+                </dependency>
+                <dependency>
+                    <groupId>com.robovm</groupId>
+                    <artifactId>robovm-debug-server</artifactId>
+                    <version>${robovm.version}</version>
+                </dependency>
             </dependencies>
         </profile>
 
         <profile>
             <id>deployment</id>
-            <dependencies>                
+            <dependencies>
                 <dependency>
                     <groupId>org.robovm</groupId>
                     <artifactId>robovm-dist-compiler</artifactId>
@@ -65,7 +71,7 @@
                             <artifactId>robovm-cacerts-full</artifactId>
                         </exclusion>
                     </exclusions>
-                </dependency>                
+                </dependency>
             </dependencies>
         </profile>
     </profiles>
@@ -84,6 +90,10 @@
             <type>tar.gz</type>
             <scope>provided</scope>
             <exclusions>
+                <exclusion>
+                    <groupId>org.robovm</groupId>
+                    <artifactId>robovm-dist-compiler</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.robovm</groupId>
                     <artifactId>robovm-rt</artifactId>
@@ -106,6 +116,12 @@
             <groupId>org.robovm</groupId>
             <artifactId>robovm-templater</artifactId>
             <version>${robovm.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.robovm</groupId>
+                    <artifactId>robovm-dist-compiler</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- Test -->
         <dependency>
@@ -169,14 +185,17 @@
                                         <include name="**/*.jar"/>
                                     </fileset>
                                 </path>
-                                <taskdef classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="maven.plugin.complete.classpath" name="instrumentIdeaExtensions"/>
+                                <taskdef classname="com.intellij.ant.InstrumentIdeaExtensions"
+                                         classpathref="maven.plugin.complete.classpath"
+                                         name="instrumentIdeaExtensions"/>
                                 <path id="sourcepath">
                                     <dirset dir="${project.basedir}">
                                         <include name="src/main/java"/>
                                         <include name="src/main/resources"/>
                                     </dirset>
                                 </path>
-                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}" extdirs="${idea.home}/lib">
+                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}"
+                                                          extdirs="${idea.home}/lib">
                                     <classpath refid="maven.compile.classpath"/>
                                     <src refid="sourcepath"/>
                                 </instrumentIdeaExtensions>

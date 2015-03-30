@@ -80,6 +80,9 @@ public class RoboVmRunProfileState extends CommandLineState {
     protected void customizeLaunchParameters(RoboVmRunConfiguration runConfig, Config config, LaunchParameters launchParameters) throws IOException {
         launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
         launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
+        if(config.getHome().isDev()) {
+            launchParameters.getArguments().add("-rvm:log=debug");
+        }
     }
 
     @NotNull

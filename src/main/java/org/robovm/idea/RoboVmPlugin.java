@@ -301,7 +301,11 @@ public class RoboVmPlugin {
     }
 
     public static Config.Home getRoboVmHome() {
-        return new Config.Home(getSdkHome());
+        try {
+            return Config.Home.find();
+        } catch(Throwable t) {
+            return new Config.Home(getSdkHome());
+        }
     }
 
     public static Collection<Module> getRoboVmModules(Project project) {

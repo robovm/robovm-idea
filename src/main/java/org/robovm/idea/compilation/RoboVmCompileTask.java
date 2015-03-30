@@ -126,8 +126,9 @@ public class RoboVmCompileTask implements CompileTask {
             // Set the Home to be used, create the Config and AppCompiler
             Config.Home home = RoboVmPlugin.getRoboVmHome();
             if(home.isDev()) {
-                builder.useDebugLibs(Boolean.getBoolean("robovm.useDebugLibs"));
+                builder.useDebugLibs(true);
                 builder.dumpIntermediates(true);
+                builder.addPluginArgument("debug:logconsole=true");
             }
             builder.home(home);
             Config config = builder.build();
@@ -250,7 +251,6 @@ public class RoboVmCompileTask implements CompileTask {
             builder.addPluginArgument("debug:sourcepath=" + b.toString());
             builder.addPluginArgument("debug:jdwpport=" + runConfig.getDebugPort());
             builder.addPluginArgument("debug:clientmode=true");
-            builder.addPluginArgument("debug:logconsole=true");
         }
     }
 

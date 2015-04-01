@@ -377,6 +377,20 @@ public class RoboVmPlugin {
         }
     }
 
+    public static File getLogDir(Module module) {
+        if (project != null) {
+            File logDir = new File(project.getBasePath(), "robovm-build/logs/");
+            if (!logDir.exists()) {
+                if (!logDir.mkdirs()) {
+                    throw new RuntimeException("Couldn't create log dir '" + logDir.getAbsolutePath() + "'");
+                }
+            }
+            return logDir;
+        } else {
+            throw new RuntimeException("No project opened");
+        }
+    }
+
     public static boolean isSdkLibrary(String path) {
         String name = new File(path).getName();
 

@@ -318,6 +318,7 @@ public class RoboVmCompileTask implements CompileTask {
             builder.addPluginArgument("debug:sourcepath=" + b.toString());
             builder.addPluginArgument("debug:jdwpport=" + runConfig.getDebugPort());
             builder.addPluginArgument("debug:clientmode=true");
+            builder.addPluginArgument("debug:logdir=" + RoboVmPlugin.getLogDir(module).getAbsolutePath());
         }
     }
 

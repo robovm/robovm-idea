@@ -35,6 +35,7 @@ import org.robovm.compiler.config.Config;
 import org.robovm.idea.RoboVmPlugin;
 
 import java.util.Collection;
+import java.util.List;
 
 public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunConfigurationSettings> implements RunConfigurationWithSuppressedDefaultDebugAction, RunConfigurationWithSuppressedDefaultRunAction, RunProfileWithCompileBeforeLaunchOption {
     public static enum TargetType {
@@ -50,6 +51,8 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     private Arch simArch;
     private String simulatorName;
     private String moduleName;
+    private String arguments;
+    private String workingDir;
 
     // these are used to pass information between
     // the compiler, the run configuration and the
@@ -59,6 +62,7 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     private int debugPort;
     private AppCompiler compiler;
     private ConfigurationType type;
+    private List<String> programArguments;
 
     public RoboVmRunConfiguration(ConfigurationType type, String name, RoboVmRunConfigurationSettings configurationModule, ConfigurationFactory factory) {
         super(name, configurationModule, factory);
@@ -105,6 +109,10 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
         String simArchStr = JDOMExternalizerUtil.readField(element, "simArch");
         simArch = simArchStr.length() == 0? null: Arch.valueOf(simArchStr);
         simulatorName = JDOMExternalizerUtil.readField(element, "simulatorName");
+        arguments = JDOMExternalizerUtil.readField(element, "arguments");
+        if(arguments == null) arguments = "";
+        workingDir = JDOMExternalizerUtil.readField(element, "workingDir");
+        if(workingDir == null) workingDir = "";
     }
 
     @Override
@@ -118,6 +126,8 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
         JDOMExternalizerUtil.writeField(element, "provisioningProfile", provisioningProfile);
         JDOMExternalizerUtil.writeField(element, "simArch", simArch == null? null: simArch.toString());
         JDOMExternalizerUtil.writeField(element, "simulatorName", simulatorName);
+        JDOMExternalizerUtil.writeField(element, "arguments", arguments == null? "": arguments);
+        JDOMExternalizerUtil.writeField(element, "workingDir", workingDir == null? "": workingDir);
     }
 
     public void setDeviceArch(Arch deviceArch) {
@@ -206,5 +216,29 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
 
     public void setTargetType(TargetType targetType) {
         this.targetType = targetType;
+    }
+
+    public String getArguments() {
+        return arguments;
+    }
+
+    public void setArguments(String arguments) {
+        this.arguments = arguments;
+    }
+
+    public void setProgramArguments(List<String> programArguments) {
+        this.programArguments = programArguments;
+    }
+
+    public List<String> getProgramArguments() {
+        return programArguments;
+    }
+
+    public String getWorkingDir() {
+        return workingDir;
+    }
+
+    public void setWorkingDir(String workingDir) {
+        this.workingDir = workingDir;
     }
 }

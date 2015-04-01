@@ -31,11 +31,13 @@ import com.intellij.openapi.roots.OrderEnumerator;
 import com.intellij.openapi.roots.OrderRootsEnumerator;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Computable;
+import org.apache.commons.exec.CommandLine;
 import org.apache.commons.io.FileUtils;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
+import org.robovm.compiler.plugin.PluginArgument;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.idea.RoboVmPlugin;
@@ -46,8 +48,7 @@ import org.robovm.idea.running.RoboVmIOSRunConfigurationSettingsEditor;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Registered by {@link org.robovm.idea.RoboVmPlugin} on startup. Responsible
@@ -170,6 +171,10 @@ public class RoboVmCompileTask implements CompileTask {
             builder.os(os);
             builder.arch(arch);
 
+            // set the plugin args
+            List<String> args = splitArgs(runConfig.getArguments());
+            applyPluginArguments(args, builder);
+
             // set build dir and install dir, pattern
             // project-basedir/robovm-build/tmp/module-name/runconfig-name/os/arch.
             // project-basedir/robovm-build/app/module-name/runconfig-name/os/arch.
@@ -220,6 +225,7 @@ public class RoboVmCompileTask implements CompileTask {
             // it knows where to find things.
             runConfig.setConfig(config);
             runConfig.setCompiler(compiler);
+            runConfig.setProgramArguments(args);
         } catch(Throwable t) {
             RoboVmPlugin.logErrorThrowable("Couldn't compile app", t, false);
             return false;
@@ -379,5 +385,53 @@ public class RoboVmCompileTask implements CompileTask {
             }
         }
         return -1;
+    }
+
+    private static String unquoteArg(String arg) {
+        if (arg.startsWith("\"") && arg.endsWith("\"")) {
+            return arg.substring(1, arg.length() - 1);
+        }
+        return arg;
+    }
+
+    public static List<String> splitArgs(String args) {
+        if (args == null || args.trim().length() == 0) {
+            return new ArrayList<String>();
+        }
+        String[] parts = CommandLine.parse("foo " + args).toStrings();
+        if (parts.length <= 1) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<String>(parts.length - 1);
+        for (int i = 1; i < parts.length; i++) {
+            result.add(unquoteArg(parts[i]));
+        }
+        return result;
+    }
+
+    /**
+     * Filters any plugin arguments and sets them on the provided builder
+     * @param args
+     * @param configBuilder builder or null to filter the args list
+     */
+    public static void applyPluginArguments(List<String> args, Config.Builder configBuilder) {
+        Map<String, PluginArgument> pluginArguments = configBuilder.fetchPluginArguments();
+        Iterator<String> iter = args.iterator();
+        while (iter.hasNext()) {
+            String arg = iter.next();
+            if (!arg.startsWith("-rvm") && arg.startsWith("-")) {
+                String argName = arg.substring(1);
+                if (argName.contains("=")) {
+                    argName = argName.substring(0, argName.indexOf('='));
+                }
+                PluginArgument pluginArg = pluginArguments.get(argName);
+                if (pluginArg != null) {
+                    if(configBuilder != null) {
+                        configBuilder.addPluginArgument(arg.substring(1));
+                        iter.remove();
+                    }
+                }
+            }
+        }
     }
 }

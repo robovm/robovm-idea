@@ -34,8 +34,10 @@ import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.compiler.util.io.Fifos;
 import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
 import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.compilation.RoboVmCompileTask;
 
 import java.io.*;
+import java.util.List;
 
 public class RoboVmRunProfileState extends CommandLineState {
     public RoboVmRunProfileState(ExecutionEnvironment environment) {
@@ -51,6 +53,7 @@ public class RoboVmRunProfileState extends CommandLineState {
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
         customizeLaunchParameters(runConfig, config, launchParameters);
+        launchParameters.setArguments(runConfig.getProgramArguments());
 
         // launch plugin may proxy stdout/stderr fifo, which
         // it then writes to. Need to save the original fifos

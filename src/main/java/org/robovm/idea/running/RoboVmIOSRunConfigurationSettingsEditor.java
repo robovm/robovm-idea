@@ -26,6 +26,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
     private JComboBox provisioningProfile;
     private JComboBox simArch;
     private JComboBox deviceArch;
+    private JTextArea args;
 
     @Override
     protected void resetEditorFrom(RoboVmRunConfiguration config) {
@@ -41,6 +42,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
         config.setProvisioningProfile(provisioningProfile.getSelectedItem().toString());
         config.setSimArch((Arch) simArch.getSelectedItem());
         config.setSimulatorName(((SimTypeWrapper)simType.getSelectedItem()).getType().getDeviceName());
+        config.setArguments(args.getText());
     }
 
     @NotNull
@@ -107,6 +109,8 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
                 provisioningProfile.setSelectedIndex(provisioningProfile.getItemCount() - 1);
             }
         }
+
+        this.args.setText(config.getArguments());
     }
 
     private class SimTypeWrapper {

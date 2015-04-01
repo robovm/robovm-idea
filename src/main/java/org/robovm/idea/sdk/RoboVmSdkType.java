@@ -20,6 +20,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.projectRoots.*;
 import com.intellij.openapi.projectRoots.impl.JavaDependentSdkType;
 import com.intellij.openapi.roots.OrderRootType;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.JarFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.jdom.Element;
@@ -137,17 +138,22 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
         }
         if(found) return;
 
-        // if not, create a new SDK
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
-            @Override
-            public void run() {
-                RoboVmSdkType sdkType = new RoboVmSdkType();
-                Sdk sdk = ProjectJdkTable.getInstance().createSdk(sdkType.suggestSdkName(null, null), sdkType);
-                sdkType.setupSdkRoots(sdk, findBestJdk());
-                ProjectJdkTable.getInstance().addJdk(sdk);
-                RoboVmPlugin.logInfo("Added new SDK " + sdk.getName());
-            }
-        });
+        Sdk jdk = findBestJdk();
+        if(jdk == null) {
+            Messages.showMessageDialog("Couldn't setup RoboVM SDK.\nPlease configure a JDK first, then restart Intellij IDEA/Android Studio.\nSee https://www.jetbrains.com/idea/help/configuring-global-project-and-module-sdks.html", "Error", RoboVmIcons.ROBOVM_LARGE);
+        } else {
+            // if not, create a new SDK
+            ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                @Override
+                public void run() {
+                    RoboVmSdkType sdkType = new RoboVmSdkType();
+                    Sdk sdk = ProjectJdkTable.getInstance().createSdk(sdkType.suggestSdkName(null, null), sdkType);
+                    sdkType.setupSdkRoots(sdk, findBestJdk());
+                    ProjectJdkTable.getInstance().addJdk(sdk);
+                    RoboVmPlugin.logInfo("Added new SDK " + sdk.getName());
+                }
+            });
+        }
     }
 
     public static Sdk findBestJdk() {

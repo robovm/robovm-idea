@@ -30,6 +30,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.LaunchParameters;
 import org.robovm.compiler.util.io.Fifos;
 import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
@@ -54,6 +55,11 @@ public class RoboVmRunProfileState extends CommandLineState {
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
         customizeLaunchParameters(runConfig, config, launchParameters);
         launchParameters.setArguments(runConfig.getProgramArguments());
+        if(config.getOs() != OS.ios) {
+            if(runConfig.getWorkingDir() != null && !runConfig.getWorkingDir().isEmpty()) {
+                launchParameters.setWorkingDirectory(new File(runConfig.getWorkingDir()));
+            }
+        }
 
         // launch plugin may proxy stdout/stderr fifo, which
         // it then writes to. Need to save the original fifos

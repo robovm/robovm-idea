@@ -21,6 +21,7 @@ import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileContext;
 import com.intellij.openapi.compiler.CompileTask;
+import com.intellij.openapi.compiler.CompilerMessageCategory;
 import com.intellij.openapi.compiler.CompilerPaths;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
@@ -38,6 +39,7 @@ import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.actions.CreateIpaAction;
 import org.robovm.idea.running.RoboVmRunConfiguration;
 import org.robovm.idea.running.RoboVmIOSRunConfigurationSettingsEditor;
 
@@ -55,12 +57,77 @@ import java.util.Set;
 public class RoboVmCompileTask implements CompileTask {
     @Override
     public boolean execute(CompileContext context) {
+        if(context.getMessageCount(CompilerMessageCategory.ERROR) > 0) {
+            RoboVmPlugin.logError("Can't compile application due to previous compilation errors");
+            return false;
+        }
+
         RunConfiguration c = context.getCompileScope().getUserData(CompileStepBeforeRun.RUN_CONFIGURATION);
         if(c == null || !(c instanceof RoboVmRunConfiguration)) {
-            return true;
+            CreateIpaAction.IpaConfig ipaConfig = context.getCompileScope().getUserData(CreateIpaAction.IPA_CONFIG_KEY);
+            if(ipaConfig != null) {
+                return compileForIpa(context, ipaConfig);
+            } else {
+                return true;
+            }
+        } else {
+            return compileForRunConfiguration(context, (RoboVmRunConfiguration)c);
         }
-        final RoboVmRunConfiguration runConfig = (RoboVmRunConfiguration)c;
+    }
 
+    private boolean compileForIpa(CompileContext context, final CreateIpaAction.IpaConfig ipaConfig) {
+        try {
+            ProgressIndicator progress = context.getProgressIndicator();
+            context.getProgressIndicator().pushState();
+            RoboVmPlugin.focusToolWindow();
+            progress.setText("Creating IPA");
+
+            RoboVmPlugin.logInfo("Creating package in " + ipaConfig.getDestinationDir().getAbsolutePath() + " ...");
+
+            Config.Builder builder = new Config.Builder();
+            builder.logger(RoboVmPlugin.getLogger());
+            File moduleBaseDir = new File(ModuleRootManager.getInstance(ipaConfig.getModule()).getContentRoots()[0].getPath());
+
+            // load the robovm.xml file
+            loadConfig(builder, moduleBaseDir, false);
+            builder.os(OS.ios);
+            builder.arch(Arch.thumbv7);
+            builder.installDir(ipaConfig.getDestinationDir());
+            builder.iosSignIdentity(SigningIdentity.find(SigningIdentity.list(), ipaConfig.getSigningIdentity()));
+            if (ipaConfig.getProvisioningProfile() != null) {
+                builder.iosProvisioningProfile(ProvisioningProfile.find(ProvisioningProfile.list(), ipaConfig.getProvisioningProfile()));
+            }
+            configureClassAndSourcepaths(context, builder, ipaConfig.getModule());
+            builder.home(RoboVmPlugin.getRoboVmHome());
+            Config config = builder.build();
+
+            progress.setFraction(0.5);
+
+            AppCompiler compiler = new AppCompiler(config);
+            RoboVmCompilerThread thread = new RoboVmCompilerThread(compiler, progress) {
+                protected void doCompile() throws Exception {
+                    compiler.createIpa(ipaConfig.getArchs());
+                }
+            };
+            thread.compile();
+
+            if(progress.isCanceled()) {
+                RoboVmPlugin.logInfo("Build canceled");
+                return false;
+            }
+
+            progress.setFraction(1);
+            RoboVmPlugin.logInfo("Package successfully created in " + ipaConfig.getDestinationDir().getAbsolutePath());
+        } catch(Throwable t) {
+            RoboVmPlugin.logErrorThrowable("Couldn't create IPA", t, false);
+            return false;
+        } finally {
+            context.getProgressIndicator().popState();
+        }
+        return true;
+    }
+
+    private boolean compileForRunConfiguration(CompileContext context, final RoboVmRunConfiguration runConfig) {
         try {
             ProgressIndicator progress = context.getProgressIndicator();
             context.getProgressIndicator().pushState();
@@ -114,7 +181,7 @@ public class RoboVmCompileTask implements CompileTask {
 
             // setup classpath entries, debug build parameters and target
             // parameters, e.g. signing identity etc.
-            Set<File> bc = configureClassAndSourcepaths(context, builder, runConfig, module);
+            Set<File> bc = configureClassAndSourcepaths(context, builder, module);
             configureDebugging(builder, runConfig, module, bc);
             configureTarget(builder, runConfig);
 
@@ -162,7 +229,7 @@ public class RoboVmCompileTask implements CompileTask {
         return true;
     }
 
-    private Set<File> configureClassAndSourcepaths(CompileContext context, Config.Builder builder, RoboVmRunConfiguration runConfig, Module module) {
+    private Set<File> configureClassAndSourcepaths(CompileContext context, Config.Builder builder, Module module) {
         // gather the boot and user classpaths. RoboVM RT libs may be
         // specified in a Maven/Gradle build file, in which case they'll
         // turn up as order entries. We filter them out here.

@@ -47,4 +47,6 @@
         </action>
     </actions>
 
+    <depends>org.jetbrains.plugins.gradle</depends>
+
 </idea-plugin>

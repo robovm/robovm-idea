@@ -47,5 +47,12 @@ public class RoboVmModuleWizardStep extends ModuleWizardStep {
         builder.setApplicationName(editor.appName.getText());
         builder.setMainClassName(editor.mainClassName.getText());
         builder.setPackageName(editor.packageName.getText());
+        if(editor.gradleRadioButton.isSelected()) {
+            builder.setBuildSystem(RoboVmModuleBuilder.BuildSystem.Gradle);
+        } else if(editor.mavenRadioButton.isSelected()) {
+            builder.setBuildSystem(RoboVmModuleBuilder.BuildSystem.Maven);
+        } else {
+            builder.setBuildSystem(RoboVmModuleBuilder.BuildSystem.None);
+        }
     }
 }

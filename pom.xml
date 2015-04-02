@@ -162,7 +162,7 @@
                     <optimize>true</optimize>
                     <encoding>UTF-8</encoding>
                     <compilerArguments>
-                        <extdirs>${idea.home}/lib</extdirs>
+                        <extdirs>${idea.home}/lib:${idea.home}/plugins/gradle/lib</extdirs>
                     </compilerArguments>
                 </configuration>
             </plugin>

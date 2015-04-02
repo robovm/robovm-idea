@@ -27,4 +27,7 @@ public class RoboVmNewModuleEditor {
     public JTextField appId;
     public JTextField mainClassName;
     public JPanel panel;
+    public JRadioButton gradleRadioButton;
+    public JRadioButton mavenRadioButton;
+    public JRadioButton noneRadioButton;
 }

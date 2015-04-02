@@ -19,45 +19,76 @@ package org.robovm.idea.builder;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
+import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
+import com.intellij.openapi.externalSystem.model.ProjectSystemId;
+import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
+import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.project.ex.ProjectManagerEx;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.*;
+import com.intellij.openapi.roots.ContentEntry;
+import com.intellij.openapi.roots.LanguageLevelModuleExtension;
+import com.intellij.openapi.roots.ModifiableRootModel;
+import com.intellij.openapi.roots.SourceFolder;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
+import com.intellij.ui.AppUIUtil;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.idea.maven.project.MavenProjectsManager;
+import org.jetbrains.plugins.gradle.GradleManager;
+import org.jetbrains.plugins.gradle.service.project.wizard.GradleModuleBuilder;
+import org.jetbrains.plugins.gradle.settings.DistributionType;
+import org.jetbrains.plugins.gradle.settings.GradleProjectSettings;
+import org.jetbrains.plugins.gradle.util.GradleUtil;
+import org.robovm.compiler.Version;
 import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.sdk.RoboVmSdkType;
 import org.robovm.templater.Templater;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Creates all the files for a new project/module using the templater.
  * See https://android.googlesource.com/platform/tools/adt/idea/+/7ac63164a27e301d45d8640852a0bdaa6eabbad0/android/src/org/jetbrains/android/newProject/AndroidModuleBuilder.java
  */
 public class RoboVmModuleBuilder extends JavaModuleBuilder {
-    private String templateName;
+    public static final String ROBOVM_VERSION_PLACEHOLDER = "__robovmVersion__";
+    public static final String PACKAGE_NAME_PLACEHOLDER = "__packageName__";
+    public static final String APP_NAME_PLACEHOLDER = "__appName__";
 
+    private String templateName;
     private String packageName;
     private String mainClassName;
     private String appName;
     private String appId;
+    private BuildSystem buildSystem;
 
     public RoboVmModuleBuilder(String templateName) {
         this.templateName = templateName;
     }
 
     public void setupRootModel(final ModifiableRootModel rootModel) throws ConfigurationException {
-        // set the RoboVM SDK instead of a JDK
-        for(Sdk sdk: ProjectJdkTable.getInstance().getAllJdks()) {
-            if(sdk.getHomePath().equals(RoboVmPlugin.getSdkHome().getAbsolutePath())) {
-                myJdk = sdk;
-                break;
+        // set the RoboVM SDK instead of a JDK, but only if
+        // there's no build system involved
+        if(buildSystem == BuildSystem.None) {
+            for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
+                if (sdk.getHomePath().equals(RoboVmPlugin.getSdkHome().getAbsolutePath())) {
+                    myJdk = sdk;
+                    break;
+                }
             }
+        } else {
+            myJdk = RoboVmSdkType.findBestJdk();
         }
         rootModel.getModuleExtension(LanguageLevelModuleExtension.class).setLanguageLevel(LanguageLevel.HIGHEST);
         super.setupRootModel(rootModel);
@@ -75,6 +106,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
             templater.mainClass(packageName + "." + mainClassName);
             templater.packageName(packageName);
             templater.buildProject(new File(contentRoot.getCanonicalPath()));
+            applyBuildSystem(project, rootModel, contentRoot);
             contentRoot.refresh(false, true);
 
             for(ContentEntry entry: rootModel.getContentEntries()) {
@@ -83,42 +115,45 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 }
                 entry.addSourceFolder(contentRoot.findFileByRelativePath("src/main/java"), false);
             }
-
-            // FIXME add run configurations
         }
     }
 
-//    private void addRunConfiguration(@NotNull AndroidFacet facet,
-//                                     @NotNull TargetSelectionMode targetSelectionMode,
-//                                     @Nullable String targetAvd) {
-//        String activityClass;
-//        if (isHelloAndroid()) {
-//            activityClass = myPackageName + '.' + myActivityName;
-//        }
-//        else {
-//            activityClass = null;
-//        }
-//        Module module = facet.getModule();
-//        AndroidUtils.addRunConfiguration(module.getProject(), facet, activityClass, false, targetSelectionMode, targetAvd);
-//    }
+    private void applyBuildSystem(final Project project, ModifiableRootModel model, VirtualFile contentRoot) {
+        if(buildSystem == BuildSystem.Gradle) {
+            try {
+                String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/build.gradle"), "UTF-8");
+                template = template.replaceAll(ROBOVM_VERSION_PLACEHOLDER, Version.getVersion());
+                File buildFile = new File(contentRoot.getCanonicalPath() + "/build.gradle");
+                FileUtils.write(buildFile, template);
 
-//    private static void addTestRunConfiguration(final AndroidFacet facet, @NotNull TargetSelectionMode mode, @Nullable String preferredAvd) {
-//        Project project = facet.getModule().getProject();
-//        RunManagerEx runManager = RunManagerEx.getInstanceEx(project);
-//        Module module = facet.getModule();
-//        RunnerAndConfigurationSettings settings = runManager
-//                .createRunConfiguration(module.getName(), AndroidTestRunConfigurationType.getInstance().getFactory());
-//
-//        AndroidTestRunConfiguration configuration = (AndroidTestRunConfiguration)settings.getConfiguration();
-//        configuration.setModule(module);
-//        configuration.setTargetSelectionMode(mode);
-//        if (preferredAvd != null) {
-//            configuration.PREFERRED_AVD = preferredAvd;
-//        }
-//
-//        runManager.addConfiguration(settings, false);
-//        runManager.setActiveConfiguration(settings);
-//    }
+                GradleProjectSettings gradleSettings = new GradleProjectSettings();
+                gradleSettings.setDistributionType(DistributionType.DEFAULT_WRAPPED);
+                gradleSettings.setExternalProjectPath(getContentEntryPath());
+                AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), new ProjectSystemId("GRADLE"));
+                project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
+                settings.linkProject(gradleSettings);
+            } catch (IOException e) {
+                // nothing to do here, can't log or throw an exception
+            }
+        } else if(buildSystem == BuildSystem.Maven) {
+            try {
+                String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/pom.xml"), "UTF-8");
+                template = template.replaceAll(ROBOVM_VERSION_PLACEHOLDER, Version.getVersion());
+                template = template.replaceAll(PACKAGE_NAME_PLACEHOLDER, packageName);
+                template = template.replaceAll(APP_NAME_PLACEHOLDER, mainClassName);
+                File buildFile = new File(contentRoot.getCanonicalPath() + "/pom.xml");
+                FileUtils.write(buildFile, template);
+                AppUIUtil.invokeLaterIfProjectAlive(project, new Runnable() {
+                    @Override
+                    public void run() {
+                        MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
+                    }
+                });
+            } catch (IOException e) {
+                // nothing to do here, can't log or throw an exception
+            }
+        }
+    }
 
     public void setApplicationId(String applicationId) {
         this.appId = applicationId;
@@ -136,6 +171,10 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         this.mainClassName = mainClassName;
     }
 
+    public void setBuildSystem(BuildSystem buildSystem) {
+        this.buildSystem = buildSystem;
+    }
+
     public ModuleType getModuleType() {
         return StdModuleTypes.JAVA;
     }
@@ -149,5 +188,11 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
     @Override
     public ModuleWizardStep[] createWizardSteps(WizardContext wizardContext, ModulesProvider modulesProvider) {
         return new ModuleWizardStep[] { new RoboVmModuleWizardStep(this, wizardContext, modulesProvider)};
+    }
+
+    public static enum BuildSystem {
+        Gradle,
+        Maven,
+        None
     }
 }

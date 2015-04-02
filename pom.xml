@@ -72,6 +72,20 @@
                         </exclusion>
                     </exclusions>
                 </dependency>
+                <dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>gradle</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/plugins/gradle/lib/gradle.jar</systemPath>
+                </dependency>
+                <dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>maven</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/plugins/maven/lib/maven.jar</systemPath>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>
@@ -162,7 +176,7 @@
                     <optimize>true</optimize>
                     <encoding>UTF-8</encoding>
                     <compilerArguments>
-                        <extdirs>${idea.home}/lib:${idea.home}/plugins/gradle/lib</extdirs>
+                        <extdirs>${idea.home}/lib</extdirs>
                     </compilerArguments>
                 </configuration>
             </plugin>

@@ -1,11 +1,23 @@
-<idea-plugin version="2">
-    <id>org.robovm.idea</id>
+<idea-plugin version="2" url="https://github.com/robovm/robovm-idea">
+    <id>org.robovm.plugin.idea</id>
     <name>RoboVM Intellij IDEA Plugin</name>
-    <version>1.3</version>
-    <vendor url="http://www.robovm.com">RoboVM</vendor>
+    <version>${project.version}</version>
+    <vendor email="hello@robovm.com" url="http://www.robovm.com">RoboVM</vendor>
 
     <description><![CDATA[
-     RoboVM support for IntelliJ<br>
+     <p>
+     RoboVM support for IntelliJ
+     </p>
+
+     <p>
+     This plugin requires Intellij IDEA to be run with Java 1.7+. You will also need to configure
+     Intellij IDEA to use at least 1GB of heap memory. See the <a href="http://docs.robovm.com">documentation</a>
+     for more information.
+     </p>
+
+     <p>
+     By installing this plugin, you agree to these <a href="http://robovm.com/develop/license/">license terms</a>.
+     </pr>
     ]]></description>
 
     <change-notes><![CDATA[

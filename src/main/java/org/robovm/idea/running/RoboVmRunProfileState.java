@@ -32,6 +32,8 @@ import org.robovm.compiler.AppCompiler;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.target.LaunchParameters;
+import org.robovm.compiler.target.ios.DeviceType;
+import org.robovm.compiler.target.ios.IOSSimulatorLaunchParameters;
 import org.robovm.compiler.util.io.Fifos;
 import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
 import org.robovm.idea.RoboVmPlugin;
@@ -55,11 +57,6 @@ public class RoboVmRunProfileState extends CommandLineState {
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
         customizeLaunchParameters(runConfig, config, launchParameters);
         launchParameters.setArguments(runConfig.getProgramArguments());
-        if(config.getOs() != OS.ios) {
-            if(runConfig.getWorkingDir() != null && !runConfig.getWorkingDir().isEmpty()) {
-                launchParameters.setWorkingDirectory(new File(runConfig.getWorkingDir()));
-            }
-        }
 
         // launch plugin may proxy stdout/stderr fifo, which
         // it then writes to. Need to save the original fifos
@@ -89,8 +86,20 @@ public class RoboVmRunProfileState extends CommandLineState {
     protected void customizeLaunchParameters(RoboVmRunConfiguration runConfig, Config config, LaunchParameters launchParameters) throws IOException {
         launchParameters.setStdoutFifo(Fifos.mkfifo("stdout"));
         launchParameters.setStderrFifo(Fifos.mkfifo("stderr"));
-        if(config.getHome().isDev()) {
-            launchParameters.getArguments().add("-rvm:log=debug");
+
+        if(config.getOs() != OS.ios) {
+            if(runConfig.getWorkingDir() != null && !runConfig.getWorkingDir().isEmpty()) {
+                launchParameters.setWorkingDirectory(new File(runConfig.getWorkingDir()));
+            }
+        } else {
+            if(launchParameters instanceof IOSSimulatorLaunchParameters) {
+                IOSSimulatorLaunchParameters simParams = (IOSSimulatorLaunchParameters)launchParameters;
+                for(DeviceType type: DeviceType.listDeviceTypes(RoboVmPlugin.getRoboVmHome())) {
+                    if (type.getDeviceName().equals(runConfig.getSimulatorName())) {
+                        simParams.setDeviceType(type);
+                    }
+                }
+            }
         }
     }
 

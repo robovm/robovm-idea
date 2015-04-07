@@ -59,6 +59,17 @@ public class RoboVmPlugin {
     static volatile Project project;
     static volatile ConsoleView consoleView;
     static volatile ToolWindow toolWindow;
+    static final List<UnprintedMessage> unprintedMessages = new ArrayList<UnprintedMessage>();
+
+    static class UnprintedMessage {
+        final String string;
+        final ConsoleViewContentType type;
+
+        public UnprintedMessage(String string, ConsoleViewContentType type) {
+            this.string = string;
+            this.type = type;
+        }
+    }
 
     public static void logBalloon(final MessageType messageType, final String message) {
         UIUtil.invokeLaterIfNeeded(new Runnable() {
@@ -101,24 +112,16 @@ public class RoboVmPlugin {
             @Override
             public void run() {
                 if (consoleView != null) {
+                    for(UnprintedMessage unprinted: unprintedMessages) {
+                        consoleView.print(unprinted.string, unprinted.type);
+                    }
                     consoleView.print(s, type);
                 } else {
+                    unprintedMessages.add(new UnprintedMessage(s, type));
                     if (type == ConsoleViewContentType.ERROR_OUTPUT) {
                         System.err.print(s);
                     } else {
                         System.out.print(s);
-                    }
-                    synchronized (RoboVmPlugin.class) {
-                        FileWriter writer = null;
-                        try {
-                            writer = new FileWriter(new File(getSdkHome(), "log.txt"), true);
-                            writer.write(s);
-                            writer.flush();
-                            writer.close();
-                        } catch (IOException e) {
-                        } finally {
-                            IOUtils.closeQuietly(writer);
-                        }
                     }
                 }
             }

@@ -47,6 +47,12 @@
         </component>
     </project-components>
 
+    <module-components>
+        <component>
+            <implementation-class>org.robovm.idea.components.RoboVmModuleComponent</implementation-class>
+        </component>
+    </module-components>
+
     <actions>
         <group id="org.robovm.idea.Menu" text="RoboVM" description="RoboVM Menu">
             <add-to-group group-id="MainMenu" anchor="last"  />

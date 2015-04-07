@@ -1,5 +1,5 @@
 <idea-plugin version="2" url="https://github.com/robovm/robovm-idea">
-    <id>org.robovm.idea</id>
+    <id>org.robovm.intellij</id>
     <name>RoboVM Intellij IDEA Plugin</name>
     <version>${project.version}</version>
     <vendor email="hello@robovm.com" url="http://www.robovm.com">RoboVM</vendor>

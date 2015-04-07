@@ -19,10 +19,13 @@ package org.robovm.idea.builder;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
+import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
 import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
+import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
@@ -45,9 +48,11 @@ import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.idea.maven.project.MavenProjectsManager;
 import org.jetbrains.plugins.gradle.GradleManager;
+import org.jetbrains.plugins.gradle.service.project.GradleProjectResolver;
 import org.jetbrains.plugins.gradle.service.project.wizard.GradleModuleBuilder;
 import org.jetbrains.plugins.gradle.settings.DistributionType;
 import org.jetbrains.plugins.gradle.settings.GradleProjectSettings;
+import org.jetbrains.plugins.gradle.util.GradleConstants;
 import org.jetbrains.plugins.gradle.util.GradleUtil;
 import org.robovm.compiler.Version;
 import org.robovm.idea.RoboVmPlugin;
@@ -118,7 +123,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         }
     }
 
-    private void applyBuildSystem(final Project project, ModifiableRootModel model, VirtualFile contentRoot) {
+    private void applyBuildSystem(final Project project, final ModifiableRootModel model, VirtualFile contentRoot) {
         if(buildSystem == BuildSystem.Gradle) {
             try {
                 String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/build.gradle"), "UTF-8");
@@ -129,9 +134,19 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 GradleProjectSettings gradleSettings = new GradleProjectSettings();
                 gradleSettings.setDistributionType(DistributionType.DEFAULT_WRAPPED);
                 gradleSettings.setExternalProjectPath(getContentEntryPath());
-                AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), new ProjectSystemId("GRADLE"));
+                AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
                 project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
                 settings.linkProject(gradleSettings);
+
+                AppUIUtil.invokeLaterIfProjectAlive(model.getProject(), new Runnable() {
+                    @Override
+                    public void run() {
+                        FileDocumentManager.getInstance().saveAllDocuments();
+                        ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
+                        builder.forceWhenUptodate(true);
+                        ExternalSystemUtil.refreshProjects(builder);
+                    }
+                });
             } catch (IOException e) {
                 // nothing to do here, can't log or throw an exception
             }
@@ -147,6 +162,10 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                     @Override
                     public void run() {
                         MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
+                        FileDocumentManager.getInstance().saveAllDocuments();
+                        ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), new ProjectSystemId("MAVEN"));
+                        builder.forceWhenUptodate(true);
+                        ExternalSystemUtil.refreshProjects(builder);
                     }
                 });
             } catch (IOException e) {

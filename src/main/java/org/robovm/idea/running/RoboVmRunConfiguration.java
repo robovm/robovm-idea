@@ -70,6 +70,11 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     }
 
     @Override
+    public ModuleBasedConfiguration clone() {
+        return super.clone();
+    }
+
+    @Override
     public Collection<Module> getValidModules() {
         return RoboVmPlugin.getRoboVmModules(getConfigurationModule().getProject());
     }
@@ -88,11 +93,6 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     @Override
     public RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) throws ExecutionException {
         return new RoboVmRunProfileState(environment);
-    }
-
-    @Override
-    public ModuleBasedConfiguration clone() {
-        return super.clone();
     }
 
     @Override

@@ -138,15 +138,10 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
                 settings.linkProject(gradleSettings);
 
-                AppUIUtil.invokeLaterIfProjectAlive(model.getProject(), new Runnable() {
-                    @Override
-                    public void run() {
-                        FileDocumentManager.getInstance().saveAllDocuments();
-                        ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
-                        builder.forceWhenUptodate(true);
-                        ExternalSystemUtil.refreshProjects(builder);
-                    }
-                });
+                FileDocumentManager.getInstance().saveAllDocuments();
+                ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
+                builder.forceWhenUptodate(true);
+                ExternalSystemUtil.refreshProjects(builder);
             } catch (IOException e) {
                 // nothing to do here, can't log or throw an exception
             }

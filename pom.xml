@@ -43,6 +43,11 @@
                     <artifactId>robovm-debug-server</artifactId>
                     <version>${robovm.version}</version>
                 </dependency>
+                <dependency>
+                    <groupId>com.robovm</groupId>
+                    <artifactId>robovm-ib-integrator</artifactId>
+                    <version>${robovm.version}</version>
+                </dependency>
             </dependencies>
         </profile>
 

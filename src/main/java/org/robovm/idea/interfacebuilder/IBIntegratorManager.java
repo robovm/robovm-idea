@@ -16,10 +16,14 @@
  */
 package org.robovm.idea.interfacebuilder;
 
+import com.intellij.openapi.compiler.CompilerPaths;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.OrderEnumerator;
 import org.robovm.idea.RoboVmPlugin;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
 
 /**
  * Created by badlogic on 07/04/15.
@@ -45,5 +49,61 @@ public class IBIntegratorManager {
             instance = new IBIntegratorManager();
         }
         return instance;
+    }
+
+    public void moduleChanged(Module module) {
+        if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
+            return;
+        }
+
+        IBIntegratorProxy proxy = daemons.get(module.getName());
+        if(proxy == null) {
+            try {
+                File buildDir = RoboVmPlugin.getModuleBuildDir(module);
+                RoboVmPlugin.logInfo("Starting Interface Builder integrator daemon for module %s", module.getName());
+                proxy = new IBIntegratorProxy(RoboVmPlugin.getRoboVmHome(), RoboVmPlugin.getLogger(), module.getName(), buildDir);
+                proxy.start();
+                daemons.put(module.getName(), proxy);
+            } catch (Throwable e) {
+                RoboVmPlugin.logWarn("Failed to start Interface Builder integrator for module " + module.getName() + ": " + e.getMessage());
+            }
+        }
+
+        if(proxy != null) {
+            // set the classpath, excluding module output paths
+            OrderEnumerator classes = ModuleRootManager.getInstance(module).orderEntries().recursively().withoutSdk().compileOnly().productionOnly();
+            List<File> classPaths = new ArrayList<File>();
+            for(String path: classes.getPathsList().getPathList()) {
+                classPaths.add(new File(path));
+            }
+            proxy.setClasspath(classPaths);
+
+            // set the source paths
+            Set<File> moduleOutputPaths = new HashSet<File>();
+            for(Module dep: ModuleRootManager.getInstance(module).getDependencies(false)) {
+                moduleOutputPaths.add(new File(CompilerPaths.getModuleOutputPath(dep, false)));
+            }
+            moduleOutputPaths.add(new File(CompilerPaths.getModuleOutputPath(module, false)));
+            proxy.setSourceFolders(moduleOutputPaths);
+
+            proxy.setResourceFolders(RoboVmPlugin.getModuleResourcePaths(module));
+        }
+    }
+
+    public void removeDaemon(Module module) {
+        if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
+            return;
+        }
+        RoboVmPlugin.logInfo("Stopping Interface Builder integrator daemon for module %s", module.getName());
+    }
+
+    public void removeAllDaemons() {
+        if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
+            return;
+        }
+        for(IBIntegratorProxy daemon: daemons.values()) {
+            daemon.shutDown();
+        }
+        RoboVmPlugin.logInfo("Stopping all Interface Builder integrator daemons");
     }
 }

@@ -39,15 +39,13 @@ import org.robovm.compiler.Version;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
+import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
 import org.robovm.idea.compilation.RoboVmCompileTask;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -112,9 +110,10 @@ public class RoboVmPlugin {
             @Override
             public void run() {
                 if (consoleView != null) {
-                    for(UnprintedMessage unprinted: unprintedMessages) {
+                    for (UnprintedMessage unprinted : unprintedMessages) {
                         consoleView.print(unprinted.string, unprinted.type);
                     }
+                    unprintedMessages.clear();
                     consoleView.print(s, type);
                 } else {
                     unprintedMessages.add(new UnprintedMessage(s, type));
@@ -391,6 +390,47 @@ public class RoboVmPlugin {
             return logDir;
         } else {
             throw new RuntimeException("No project opened");
+        }
+    }
+
+    public static File getModuleBuildDir(Module module) {
+        if (module.getProject() != null) {
+            File buildDir = new File(module.getProject().getBasePath(), "robovm-build/tmp/" + module.getName());
+            if (!buildDir.exists()) {
+                if (!buildDir.mkdirs()) {
+                    throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");
+                }
+            }
+            return buildDir;
+        } else {
+            throw new RuntimeException("No project opened");
+        }
+    }
+
+    public static Set<File> getModuleResourcePaths(Module module) {
+        try {
+            File projectRoot = new File(module.getModuleFilePath());
+            Config.Builder configBuilder = new Config.Builder();
+            configBuilder.home(RoboVmPlugin.getRoboVmHome());
+            configBuilder.addClasspathEntry(new File(".")); // Fake a classpath to make Config happy
+            configBuilder.skipLinking(true);
+            RoboVmCompileTask.loadConfig(configBuilder, projectRoot, false);
+            Config config = configBuilder.build();
+            Set<File> paths = new HashSet<>();
+            for (Resource r : config.getResources()) {
+                if (r.getPath() != null) {
+                    if (r.getPath().exists() && r.getPath().isDirectory()) {
+                        paths.add(r.getPath());
+                    }
+                } else if (r.getDirectory() != null) {
+                    if (r.getDirectory().exists() && r.getDirectory().isDirectory()) {
+                        paths.add(r.getDirectory());
+                    }
+                }
+            }
+            return paths;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

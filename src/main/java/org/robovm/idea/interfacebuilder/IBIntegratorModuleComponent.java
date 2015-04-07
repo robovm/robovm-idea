@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea.components;
+package org.robovm.idea.interfacebuilder;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
@@ -22,28 +22,32 @@ import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.idea.RoboVmPlugin;
 
-public class RoboVmModuleComponent implements ModuleComponent {
+public class IBIntegratorModuleComponent implements ModuleComponent {
     private final Module module;
     private final Project project;
 
-    public RoboVmModuleComponent(Module module, Project project) {
+    public IBIntegratorModuleComponent(Module module, Project project) {
         this.module = module;
         this.project = project;
     }
 
     @Override
     public void projectOpened() {
-        RoboVmPlugin.logInfo("Module added");
+
     }
 
     @Override
     public void projectClosed() {
-
+        IBIntegratorManager.getInstance().removeAllDaemons();
     }
 
     @Override
     public void moduleAdded() {
-        RoboVmPlugin.logInfo("Module added");
+        if(!RoboVmPlugin.isRoboVmModule(module)) {
+            return;
+        }
+
+        IBIntegratorManager.getInstance().moduleChanged(module);
     }
 
     @Override
@@ -59,6 +63,6 @@ public class RoboVmModuleComponent implements ModuleComponent {
     @NotNull
     @Override
     public String getComponentName() {
-        return "org.robovm.idea.components.RoboVmModuleComponent";
+        return "org.robovm.idea.interfacebuilder.IBIntegratorModuleComponent";
     }
 }

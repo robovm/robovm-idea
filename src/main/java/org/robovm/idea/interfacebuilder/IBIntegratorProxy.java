@@ -37,7 +37,7 @@ public class IBIntegratorProxy {
                 ibintegratorClass = Class.forName("com.robovm.ibintegrator.IBIntegrator");
             } catch (ClassNotFoundException e) {
                 throw new Error("The RoboVM Interface Builder integrator has not "
-                        + "been compiled into this version of the RoboVM for Eclipse plugin");
+                        + "been compiled into this version of the RoboVM for Intellij IDEA plugin");
             }
         }
         return ibintegratorClass;

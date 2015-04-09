@@ -21,12 +21,16 @@ import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerManager;
+import com.intellij.openapi.compiler.CompilerPaths;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderEnumerator;
 import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -36,15 +40,18 @@ import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.robovm.compiler.Version;
+import org.robovm.compiler.clazz.Path;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
 import org.robovm.idea.compilation.RoboVmCompileTask;
+import org.robovm.idea.interfacebuilder.RoboVmFileEditorManagerListener;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -166,6 +173,10 @@ public class RoboVmPlugin {
         if (!found) {
             CompilerManager.getInstance(project).addAfterTask(new RoboVmCompileTask());
         }
+
+        // hook ito the message bus so we get to know if a storyboard/xib
+        // file is opened
+        project.getMessageBus().connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new RoboVmFileEditorManagerListener(project));
 
         // initialize our tool window to which we
         // log all messages
@@ -409,12 +420,12 @@ public class RoboVmPlugin {
 
     public static Set<File> getModuleResourcePaths(Module module) {
         try {
-            File projectRoot = new File(module.getModuleFilePath());
+            File moduleBaseDir = new File(ModuleRootManager.getInstance(module).getContentRoots()[0].getPath());
             Config.Builder configBuilder = new Config.Builder();
             configBuilder.home(RoboVmPlugin.getRoboVmHome());
             configBuilder.addClasspathEntry(new File(".")); // Fake a classpath to make Config happy
             configBuilder.skipLinking(true);
-            RoboVmCompileTask.loadConfig(configBuilder, projectRoot, false);
+            RoboVmCompileTask.loadConfig(configBuilder, moduleBaseDir, false);
             Config config = configBuilder.build();
             Set<File> paths = new HashSet<>();
             for (Resource r : config.getResources()) {
@@ -431,6 +442,38 @@ public class RoboVmPlugin {
             return paths;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static Module isRoboVmModuleResourcePath(VirtualFile file) {
+        if(project == null) {
+            return null;
+        }
+
+        try {
+            // using reflection here as building the config takes an
+            // immense amount of time
+            Field field = Config.Builder.class.getDeclaredField("config");
+            field.setAccessible(true);
+
+            for (Module module : ModuleManager.getInstance(project).getModules()) {
+                File moduleBaseDir = new File(ModuleRootManager.getInstance(module).getContentRoots()[0].getPath());
+                Config.Builder builder = new Config.Builder();
+                builder.home(RoboVmPlugin.getRoboVmHome());
+                builder.addClasspathEntry(new File(".")); // Fake a classpath to make Config happy
+                builder.skipLinking(true);
+                builder.readProjectProperties(moduleBaseDir, false);
+                builder.readProjectConfig(moduleBaseDir, false);
+                Config config = (Config)field.get(builder);
+                for(Resource res: config.getResources()) {
+                    if(new File(file.getCanonicalPath()).getAbsolutePath().startsWith(res.getDirectory().getAbsolutePath())) {
+                        return module;
+                    }
+                }
+            }
+            return null;
+        } catch(Throwable t) {
+            return null;
         }
     }
 

@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Set;
 
+import com.intellij.openapi.module.Module;
 import org.robovm.compiler.config.Config.Home;
 import org.robovm.compiler.log.Logger;
 

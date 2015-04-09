@@ -106,4 +106,8 @@ public class IBIntegratorManager {
         }
         RoboVmPlugin.logInfo("Stopping all Interface Builder integrator daemons");
     }
+
+    public IBIntegratorProxy getProxy(Module module) {
+        return daemons.get(module.getName());
+    }
 }

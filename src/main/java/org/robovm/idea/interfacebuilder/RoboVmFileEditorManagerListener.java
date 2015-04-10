@@ -53,7 +53,6 @@ public class RoboVmFileEditorManagerListener implements FileEditorManagerListene
 
     @Override
     public void fileClosed(FileEditorManager source, VirtualFile file) {
-        RoboVmPlugin.logInfo("File closed: " + file.getCanonicalPath());
     }
 
     @Override

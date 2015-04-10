@@ -104,7 +104,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         if (files.length > 0) {
             final VirtualFile contentRoot = files[0];
             final Project project = rootModel.getProject();
-            Templater templater = new Templater(templateName);
+            Templater templater = new Templater(RoboVmPlugin.getLogger(), templateName);
             templater.appId(appId);
             templater.appName(appName);
             templater.executable(appName);

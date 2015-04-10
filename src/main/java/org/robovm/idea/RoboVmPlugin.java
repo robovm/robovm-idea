@@ -345,6 +345,13 @@ public class RoboVmPlugin {
             }
         }
 
+        // check if there's a robovm.xml file in the root of the module
+        for(VirtualFile file: ModuleRootManager.getInstance(module).getContentRoots()) {
+            if(file.findChild("robovm.xml") != null) {
+                return true;
+            }
+        }
+
         return false;
     }
 

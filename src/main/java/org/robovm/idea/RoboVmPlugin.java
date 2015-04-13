@@ -413,7 +413,7 @@ public class RoboVmPlugin {
 
     public static File getModuleBuildDir(Module module) {
         if (module.getProject() != null) {
-            File buildDir = new File(module.getProject().getBasePath(), "robovm-build/tmp/" + module.getName());
+            File buildDir = new File(module.getModuleFilePath(), "robovm-build/tmp/" + module.getName());
             if (!buildDir.exists()) {
                 if (!buildDir.mkdirs()) {
                     throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");

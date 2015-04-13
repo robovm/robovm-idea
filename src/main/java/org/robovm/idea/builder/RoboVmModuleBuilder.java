@@ -19,20 +19,18 @@ package org.robovm.idea.builder;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
-import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
+import com.intellij.openapi.compiler.CompileContext;
+import com.intellij.openapi.compiler.CompileScope;
+import com.intellij.openapi.compiler.CompileStatusNotification;
+import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
-import com.intellij.openapi.externalSystem.model.ProjectSystemId;
 import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
-import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.project.ex.ProjectManagerEx;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ContentEntry;
@@ -47,15 +45,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.idea.maven.project.MavenProjectsManager;
-import org.jetbrains.plugins.gradle.GradleManager;
-import org.jetbrains.plugins.gradle.service.project.GradleProjectResolver;
-import org.jetbrains.plugins.gradle.service.project.wizard.GradleModuleBuilder;
 import org.jetbrains.plugins.gradle.settings.DistributionType;
 import org.jetbrains.plugins.gradle.settings.GradleProjectSettings;
 import org.jetbrains.plugins.gradle.util.GradleConstants;
-import org.jetbrains.plugins.gradle.util.GradleUtil;
 import org.robovm.compiler.Version;
 import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.interfacebuilder.IBIntegratorManager;
 import org.robovm.idea.sdk.RoboVmSdkType;
 import org.robovm.templater.Templater;
 
@@ -123,7 +118,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         }
     }
 
-    private void applyBuildSystem(final Project project, final ModifiableRootModel model, VirtualFile contentRoot) {
+    private void applyBuildSystem(final Project project, final ModifiableRootModel model, final VirtualFile contentRoot) {
         if(buildSystem == BuildSystem.Gradle) {
             try {
                 String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/build.gradle"), "UTF-8");
@@ -137,11 +132,6 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
                 project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
                 settings.linkProject(gradleSettings);
-
-                FileDocumentManager.getInstance().saveAllDocuments();
-                ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
-                builder.forceWhenUptodate(true);
-                ExternalSystemUtil.refreshProjects(builder);
             } catch (IOException e) {
                 // nothing to do here, can't log or throw an exception
             }
@@ -156,17 +146,24 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 AppUIUtil.invokeLaterIfProjectAlive(project, new Runnable() {
                     @Override
                     public void run() {
-                        MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
                         FileDocumentManager.getInstance().saveAllDocuments();
-                        ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), new ProjectSystemId("MAVEN"));
-                        builder.forceWhenUptodate(true);
-                        ExternalSystemUtil.refreshProjects(builder);
+                        MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
                     }
                 });
             } catch (IOException e) {
                 // nothing to do here, can't log or throw an exception
             }
         }
+    }
+
+    private void setupIBandCompile(final Project project) {
+        IBIntegratorManager.getInstance().projectChanged(project);
+        CompileScope scope = CompilerManager.getInstance(project).createProjectCompileScope(project);
+        CompilerManager.getInstance(project).compile(scope, new CompileStatusNotification() {
+            @Override
+            public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
+            }
+        });
     }
 
     public void setApplicationId(String applicationId) {

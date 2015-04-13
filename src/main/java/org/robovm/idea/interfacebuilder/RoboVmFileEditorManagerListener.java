@@ -1,5 +1,7 @@
 package org.robovm.idea.interfacebuilder;
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.compiler.*;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
@@ -38,16 +40,42 @@ public class RoboVmFileEditorManagerListener implements FileEditorManagerListene
             }
         }
         if(module != null) {
-            IBIntegratorProxy proxy = IBIntegratorManager.getInstance().getProxy(module);
-            if(proxy != null) {
-                proxy.openProjectFile(file.getCanonicalPath());
-                AppUIUtil.invokeOnEdt(new Runnable() {
-                    @Override
-                    public void run() {
-                        FileEditorManager.getInstance(project).closeFile(file);
+            AppUIUtil.invokeOnEdt(new Runnable() {
+                @Override
+                public void run() {
+                    FileEditorManager.getInstance(project).closeFile(file);
+                }
+            });
+
+            final Module foundModule = module;
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    // this might be the first time someone opened a storyboard, do
+                    // at least one compilation if the target folder doesn't exist!
+                    final VirtualFile outputPath = CompilerPaths.getModuleOutputDirectory(foundModule, false);
+                    if(outputPath == null || !outputPath.exists()) {
+                        CompileScope scope = CompilerManager.getInstance(project).createModuleCompileScope(foundModule, true);
+                        CompilerManager.getInstance(project).compile(scope, new CompileStatusNotification() {
+                            @Override
+                            public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
+                                IBIntegratorManager.getInstance().moduleChanged(foundModule);
+                                openXCodeProject(foundModule, file);
+                            }
+                        });
+                    } else {
+                        IBIntegratorManager.getInstance().moduleChanged(foundModule);
+                        openXCodeProject(foundModule, file);
                     }
-                });
-            }
+                }
+            });
+        }
+    }
+
+    private void openXCodeProject(Module module, final VirtualFile file) {
+        IBIntegratorProxy proxy = IBIntegratorManager.getInstance().getProxy(module);
+        if(proxy != null) {
+            proxy.openProjectFile(file.getCanonicalPath());
         }
     }
 

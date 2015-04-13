@@ -18,6 +18,8 @@ package org.robovm.idea.interfacebuilder;
 
 import com.intellij.openapi.compiler.CompilerPaths;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderEnumerator;
 import org.robovm.idea.RoboVmPlugin;
@@ -49,6 +51,12 @@ public class IBIntegratorManager {
             instance = new IBIntegratorManager();
         }
         return instance;
+    }
+
+    public void projectChanged(Project project) {
+        for(Module module: ModuleManager.getInstance(project).getModules()) {
+            moduleChanged(module);
+        }
     }
 
     public void moduleChanged(Module module) {

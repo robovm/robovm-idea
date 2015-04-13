@@ -369,60 +369,48 @@ public class RoboVmPlugin {
         });
     }
 
-    public static File getBuildDir(String name, String moduleName, OS os, Arch arch) {
-        if (project != null) {
-            File buildDir = new File(project.getBasePath(), "robovm-build/tmp/" + moduleName + "/" + os + "/" + arch);
-            if (!buildDir.exists()) {
-                if (!buildDir.mkdirs()) {
-                    throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");
-                }
+    public static File getModuleLogDir(Module module) {
+        File logDir = new File(getModuleBaseDir(module), "robovm-build/logs/");
+        if (!logDir.exists()) {
+            if (!logDir.mkdirs()) {
+                throw new RuntimeException("Couldn't create log dir '" + logDir.getAbsolutePath() + "'");
             }
-            return buildDir;
-        } else {
-            throw new RuntimeException("No project opened");
         }
+        return logDir;
     }
 
-    public static File getInstallDir(String name, String moduleName, OS os, Arch arch) {
-        if (project != null) {
-            File buildDir = new File(project.getBasePath(), "robovm-build/app/" + moduleName + "/" + os + "/" + arch);
-            if (!buildDir.exists()) {
-                if (!buildDir.mkdirs()) {
-                    throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");
-                }
+    public static File getModuleXcodeDir(Module module) {
+        File buildDir = new File(getModuleBaseDir(module), "robovm-build/xcode/");
+        if (!buildDir.exists()) {
+            if (!buildDir.mkdirs()) {
+                throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");
             }
-            return buildDir;
-        } else {
-            throw new RuntimeException("No project opened");
         }
+        return buildDir;
     }
 
-    public static File getLogDir(Module module) {
-        if (project != null) {
-            File logDir = new File(project.getBasePath(), "robovm-build/logs/");
-            if (!logDir.exists()) {
-                if (!logDir.mkdirs()) {
-                    throw new RuntimeException("Couldn't create log dir '" + logDir.getAbsolutePath() + "'");
-                }
+    public static File getModuleBuildDir(Module module, String runConfigName, OS os, Arch arch) {
+        File buildDir = new File(getModuleBaseDir(module), "robovm-build/tmp/" + runConfigName + "/" + os + "/" + arch);
+        if (!buildDir.exists()) {
+            if (!buildDir.mkdirs()) {
+                throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");
             }
-            return logDir;
-        } else {
-            throw new RuntimeException("No project opened");
         }
+        return buildDir;
     }
 
-    public static File getModuleBuildDir(Module module) {
-        if (module.getProject() != null) {
-            File buildDir = new File(module.getModuleFilePath(), "robovm-build/tmp/" + module.getName());
-            if (!buildDir.exists()) {
-                if (!buildDir.mkdirs()) {
-                    throw new RuntimeException("Couldn't create build dir '" + buildDir.getAbsolutePath() + "'");
-                }
+    public static File getModuleClassesDir(String moduleBaseDir) {
+        File classesDir = new File(moduleBaseDir, "robovm-build/classes/");
+        if(!classesDir.exists()) {
+            if (!classesDir.mkdirs()) {
+                throw new RuntimeException("Couldn't create classes dir '" + classesDir.getAbsolutePath() + "'");
             }
-            return buildDir;
-        } else {
-            throw new RuntimeException("No project opened");
         }
+        return classesDir;
+    }
+
+    public static File getModuleBaseDir(Module module) {
+        return new File(ModuleRootManager.getInstance(module).getContentRoots()[0].getPath());
     }
 
     public static Set<File> getModuleResourcePaths(Module module) {

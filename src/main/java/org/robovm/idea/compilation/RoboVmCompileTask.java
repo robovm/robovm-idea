@@ -176,9 +176,9 @@ public class RoboVmCompileTask implements CompileTask {
             applyPluginArguments(args, builder);
 
             // set build dir and install dir, pattern
-            // project-basedir/robovm-build/tmp/module-name/runconfig-name/os/arch.
-            // project-basedir/robovm-build/app/module-name/runconfig-name/os/arch.
-            File buildDir = RoboVmPlugin.getBuildDir(module.getName(), runConfig.getName(), os, arch);
+            // module-basedir/robovm-build/tmp/module-name/runconfig-name/os/arch.
+            // module-basedir/robovm-build/app/module-name/runconfig-name/os/arch.
+            File buildDir = RoboVmPlugin.getModuleBuildDir(module, runConfig.getName(), os, arch);
             builder.tmpDir(buildDir);
             builder.skipInstall(true);
             RoboVmPlugin.logInfo("Building executable in %s", buildDir.getAbsolutePath());
@@ -324,7 +324,7 @@ public class RoboVmCompileTask implements CompileTask {
             builder.addPluginArgument("debug:sourcepath=" + b.toString());
             builder.addPluginArgument("debug:jdwpport=" + runConfig.getDebugPort());
             builder.addPluginArgument("debug:clientmode=true");
-            builder.addPluginArgument("debug:logdir=" + RoboVmPlugin.getLogDir(module).getAbsolutePath());
+            builder.addPluginArgument("debug:logdir=" + RoboVmPlugin.getModuleLogDir(module).getAbsolutePath());
         }
     }
 

@@ -67,7 +67,7 @@ public class IBIntegratorManager {
         IBIntegratorProxy proxy = daemons.get(module.getName());
         if(proxy == null) {
             try {
-                File buildDir = RoboVmPlugin.getModuleBuildDir(module);
+                File buildDir = RoboVmPlugin.getModuleXcodeDir(module);
                 RoboVmPlugin.logInfo("Starting Interface Builder integrator daemon for module %s", module.getName());
                 proxy = new IBIntegratorProxy(RoboVmPlugin.getRoboVmHome(), RoboVmPlugin.getLogger(), module.getName(), buildDir);
                 proxy.start();

@@ -46,6 +46,7 @@ import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
+import org.robovm.compiler.target.ios.InfoPList;
 import org.robovm.idea.compilation.RoboVmCompileTask;
 import org.robovm.idea.interfacebuilder.RoboVmFileEditorManagerListener;
 import org.robovm.idea.sdk.RoboVmSdkType;
@@ -483,7 +484,9 @@ public class RoboVmPlugin {
             configBuilder.skipLinking(true);
             RoboVmCompileTask.loadConfig(configBuilder, projectRoot, false);
             Config config = configBuilder.build();
-            return config.getIosInfoPList().getFile();
+            InfoPList iosInfoPList = config.getIosInfoPList();
+            if(iosInfoPList != null) return iosInfoPList.getFile();
+            else return null;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

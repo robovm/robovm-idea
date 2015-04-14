@@ -68,6 +68,10 @@
                 text="Storyboard" description="An iOS Storyboard">
             <add-to-group group-id="NewGroup" anchor="first"/>
         </action>
+        <action id="org.robovm.idea.OpenXCode" class="org.robovm.idea.actions.OpenXCodeAction" text="Open Xcode Project"
+                description="Opens the Xcode project for the selected module">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
     </actions>
 
     <depends>org.jetbrains.plugins.gradle</depends>

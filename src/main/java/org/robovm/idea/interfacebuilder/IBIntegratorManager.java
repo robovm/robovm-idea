@@ -99,7 +99,14 @@ public class IBIntegratorManager {
             }
             proxy.setSourceFolders(moduleOutputPaths);
 
+            // set the resource paths
             proxy.setResourceFolders(RoboVmPlugin.getModuleResourcePaths(module));
+
+            // set the plist file location
+            File infoPlist = RoboVmPlugin.getModuleInfoPlist(module);
+            if(infoPlist != null) {
+                proxy.setInfoPlist(infoPlist);
+            }
         }
     }
 

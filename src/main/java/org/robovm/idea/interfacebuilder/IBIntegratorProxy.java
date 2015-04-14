@@ -59,6 +59,20 @@ public class IBIntegratorProxy {
         }
     }
 
+    public void setInfoPlist(final File file) {
+        try {
+            try {
+                getIBIntegratorClass().getMethod("setInfoPlist", File.class).invoke(instance, file);
+            } catch (InvocationTargetException e) {
+                throw e.getCause() != null ? e.getCause() : e;
+            }
+        } catch (Error | RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new Error(t);
+        }
+    }
+
     public void setResourceFolders(Set<File> resourceFolders) {
         try {
             try {

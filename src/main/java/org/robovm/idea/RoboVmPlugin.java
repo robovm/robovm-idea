@@ -52,6 +52,7 @@ import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
@@ -469,6 +470,22 @@ public class RoboVmPlugin {
             return null;
         } catch(Throwable t) {
             return null;
+        }
+    }
+
+    public static File getModuleInfoPlist(Module module) {
+        try {
+            File projectRoot = getModuleBaseDir(module);
+            Config.Builder configBuilder = new Config.Builder();
+            configBuilder.home(RoboVmPlugin.getRoboVmHome());
+            // Fake a classpath to make Config happy
+            configBuilder.addClasspathEntry(new File("."));
+            configBuilder.skipLinking(true);
+            RoboVmCompileTask.loadConfig(configBuilder, projectRoot, false);
+            Config config = configBuilder.build();
+            return config.getIosInfoPList().getFile();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

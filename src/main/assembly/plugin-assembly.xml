@@ -10,16 +10,6 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <baseDirectory>${project.artifactId}</baseDirectory>
 
-    <fileSets>
-        <fileSet>
-            <directory>${project.basedir}/src/main/resources/META-INF</directory>
-            <outputDirectory>/META-INF</outputDirectory>
-            <includes>
-                <include>**/*</include>
-            </includes>
-        </fileSet>
-    </fileSets>
-
     <dependencySets>
         <dependencySet>
             <outputDirectory>/</outputDirectory>

@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.robovm</groupId>
     <artifactId>org.robovm.idea</artifactId>
     <name>RoboVM plugin for Intellij IDEA</name>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -18,7 +17,8 @@
         <connection>scm:git:git://github.com/robovm/robovm-idea.git</connection>
         <developerConnection>scm:git:git@github.com:robovm/robovm-idea.git</developerConnection>
         <url>https://github.com/robovm/robovm-idea.git</url>
-    </scm>
+      <tag>robovm-idea-1.1.0</tag>
+  </scm>
 
     <profiles>
         <profile>
@@ -222,24 +222,21 @@
                         <configuration>
                             <target>
                                 <path id="maven.plugin.complete.classpath">
-                                    <path refid="maven.plugin.classpath"/>
+                                    <path refid="maven.plugin.classpath" />
                                     <fileset dir="${idea.home}">
-                                        <include name="**/*.jar"/>
+                                        <include name="**/*.jar" />
                                     </fileset>
                                 </path>
-                                <taskdef classname="com.intellij.ant.InstrumentIdeaExtensions"
-                                         classpathref="maven.plugin.complete.classpath"
-                                         name="instrumentIdeaExtensions"/>
+                                <taskdef classname="com.intellij.ant.InstrumentIdeaExtensions" classpathref="maven.plugin.complete.classpath" name="instrumentIdeaExtensions" />
                                 <path id="sourcepath">
                                     <dirset dir="${project.basedir}">
-                                        <include name="src/main/java"/>
-                                        <include name="src/main/resources"/>
+                                        <include name="src/main/java" />
+                                        <include name="src/main/resources" />
                                     </dirset>
                                 </path>
-                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}"
-                                                          extdirs="${idea.home}/lib">
-                                    <classpath refid="maven.compile.classpath"/>
-                                    <src refid="sourcepath"/>
+                                <instrumentIdeaExtensions destdir="${project.build.outputDirectory}" extdirs="${idea.home}/lib">
+                                    <classpath refid="maven.compile.classpath" />
+                                    <src refid="sourcepath" />
                                 </instrumentIdeaExtensions>
                             </target>
                         </configuration>
@@ -305,7 +302,7 @@
                                         </goals>
                                     </pluginExecutionFilter>
                                     <action>
-                                        <ignore/>
+                                        <ignore />
                                     </action>
                                 </pluginExecution>
                             </pluginExecutions>

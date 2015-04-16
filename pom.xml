@@ -14,6 +14,12 @@
         <idea.home>/Applications/IntelliJ IDEA 14 CE.app/Contents/</idea.home>
     </properties>
 
+    <scm>
+        <connection>scm:git:git://github.com/robovm/robovm-idea.git</connection>
+        <developerConnection>scm:git:git@github.com:robovm/robovm-idea.git</developerConnection>
+        <url>https://github.com/robovm/robovm-idea.git</url>
+    </scm>
+
     <profiles>
         <profile>
             <id>development</id>

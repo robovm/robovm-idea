@@ -213,12 +213,8 @@ public class RoboVmPlugin {
                 logError("Couldn't create sdk dir in %s", sdkHome.getAbsolutePath());
                 throw new RuntimeException("Couldn't create sdk dir in " + sdkHome.getAbsolutePath());
             }
-            extractArchive("robovm-dist", sdkHome);
-        } else {
-            if (Version.getVersion().contains("SNAPSHOT")) {
-                // extractArchive("robovm-dist", sdkHome);
-            }
         }
+        extractArchive("robovm-dist", sdkHome);
 
         // create an SDK if it doesn't exist yet
         RoboVmSdkType.createSdkIfNotExists();
@@ -236,6 +232,7 @@ public class RoboVmPlugin {
     private static void extractArchive(String archive, File dest) {
         archive = "/" + archive;
         TarArchiveInputStream in = null;
+        boolean isSnapshot = Version.getVersion().toLowerCase().contains("snapshot");
         try {
             in = new TarArchiveInputStream(new GZIPInputStream(RoboVmPlugin.class.getResourceAsStream(archive)));
             ArchiveEntry entry = null;
@@ -244,6 +241,9 @@ public class RoboVmPlugin {
                 if (entry.isDirectory()) {
                     f.mkdirs();
                 } else {
+                    if(!isSnapshot && f.exists()) {
+                        continue;
+                    }
                     f.getParentFile().mkdirs();
                     OutputStream out = null;
                     try {

@@ -17,8 +17,7 @@
         <connection>scm:git:git://github.com/robovm/robovm-idea.git</connection>
         <developerConnection>scm:git:git@github.com:robovm/robovm-idea.git</developerConnection>
         <url>https://github.com/robovm/robovm-idea.git</url>
-      <tag>HEAD</tag>
-  </scm>
+    </scm>
 
     <profiles>
         <profile>

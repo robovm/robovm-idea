@@ -335,8 +335,10 @@ public class RoboVmPlugin {
 
     public static boolean isRoboVmModule(Module module) {
         // HACK! to identify if the module uses a robovm sdk
-        if (ModuleRootManager.getInstance(module).getSdk().getSdkType().getName().toLowerCase().contains("robovm")) {
-            return true;
+        if (ModuleRootManager.getInstance(module).getSdk() != null) {
+            if (ModuleRootManager.getInstance(module).getSdk().getSdkType().getName().toLowerCase().contains("robovm")) {
+                return true;
+            }
         }
 
         // check if there's any RoboVM RT libs in the classpath

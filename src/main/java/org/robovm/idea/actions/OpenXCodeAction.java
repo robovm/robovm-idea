@@ -52,7 +52,7 @@ public class OpenXCodeAction extends AnAction {
         if(proxy == null) {
             RoboVmPlugin.logError("Couldn't get interface builder integrator for module %s", module.getName());
         } else {
-            proxy.openProjectFile(RoboVmPlugin.getModuleInfoPlist(module).getAbsolutePath());
+            proxy.openProject();
         }
     }
 

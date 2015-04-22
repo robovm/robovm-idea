@@ -160,6 +160,20 @@ public class IBIntegratorProxy {
         }
     }
 
+    public void openProject() {
+        try {
+            try {
+                getIBIntegratorClass().getMethod("openProject").invoke(instance);
+            } catch (InvocationTargetException e) {
+                throw e.getCause() != null ? e.getCause() : e;
+            }
+        } catch (Error | RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new Error(t);
+        }
+    }
+
     public void openProjectFile(String file) {
         try {
             try {

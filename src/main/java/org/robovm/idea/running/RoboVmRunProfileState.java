@@ -94,7 +94,7 @@ public class RoboVmRunProfileState extends CommandLineState {
         } else {
             if(launchParameters instanceof IOSSimulatorLaunchParameters) {
                 IOSSimulatorLaunchParameters simParams = (IOSSimulatorLaunchParameters)launchParameters;
-                for(DeviceType type: DeviceType.listDeviceTypes(RoboVmPlugin.getRoboVmHome())) {
+                for(DeviceType type: DeviceType.listDeviceTypes()) {
                     if (type.getDeviceName().equals(runConfig.getSimulatorName())) {
                         simParams.setDeviceType(type);
                     }

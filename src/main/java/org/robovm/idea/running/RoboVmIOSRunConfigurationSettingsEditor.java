@@ -98,7 +98,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
 
         // populate simulators
         simType.removeAllItems();
-        for(DeviceType type: DeviceType.listDeviceTypes(RoboVmPlugin.getRoboVmHome())) {
+        for(DeviceType type: DeviceType.listDeviceTypes()) {
             simType.addItem(new SimTypeWrapper(type));
             if(type.getDeviceName().equals(config.getSimulatorName())) {
                 simType.setSelectedIndex(simType.getItemCount() - 1);

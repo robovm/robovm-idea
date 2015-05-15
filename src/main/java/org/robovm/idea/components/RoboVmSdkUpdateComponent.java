@@ -14,21 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
  */
-package org.robovm.idea.interfacebuilder;
+package org.robovm.idea.components;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.roots.ModifiableRootModel;
 import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.impl.ModuleRootManagerImpl;
+import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.idea.RoboVmPlugin;
 
-public class IBIntegratorModuleComponent implements ModuleComponent {
+/**
+ * Adds or updates the RoboVM SDK to a module
+ */
+public class RoboVmSdkUpdateComponent implements ModuleComponent {
     private final Module module;
     private final Project project;
 
-    public IBIntegratorModuleComponent(Module module, Project project) {
+    public RoboVmSdkUpdateComponent(Module module, Project project) {
         this.module = module;
         this.project = project;
     }
@@ -40,7 +46,7 @@ public class IBIntegratorModuleComponent implements ModuleComponent {
 
     @Override
     public void projectClosed() {
-        IBIntegratorManager.getInstance().removeAllDaemons();
+
     }
 
     @Override
@@ -48,7 +54,18 @@ public class IBIntegratorModuleComponent implements ModuleComponent {
         if(!RoboVmPlugin.isRoboVmModule(module)) {
             return;
         }
-        IBIntegratorManager.getInstance().moduleChanged(module);
+        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+            @Override
+            public void run() {
+                ModuleRootManager manager = ModuleRootManager.getInstance(module);
+                ModifiableRootModel model = manager.getModifiableModel();
+                Sdk sdk = RoboVmPlugin.getSdk();
+                if (sdk != null) {
+                    model.setSdk(sdk);
+                    model.commit();
+                }
+            }
+        });
     }
 
     @Override
@@ -64,6 +81,6 @@ public class IBIntegratorModuleComponent implements ModuleComponent {
     @NotNull
     @Override
     public String getComponentName() {
-        return "org.robovm.idea.interfacebuilder.IBIntegratorModuleComponent";
+        return "org.robovm.idea.components.RoboVmSdkUpdateComponent";
     }
 }

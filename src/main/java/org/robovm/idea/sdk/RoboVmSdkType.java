@@ -120,7 +120,7 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
         sdkModificator.setVersionString(jdk.getVersionString());
 
         // set the home path, we check this in createSdkIfNotExists
-        sdkModificator.setHomePath(RoboVmPlugin.getSdkHome().getAbsolutePath());
+        sdkModificator.setHomePath(jdk.getHomePath());
 
         // commit changes and let IDEA handle the rest
         sdkModificator.commitChanges();
@@ -129,14 +129,7 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
     public static void createSdkIfNotExists() {
         // check if a RoboVM SDK already exists
         // for our version
-        boolean found = false;
-        for(Sdk sdk: ProjectJdkTable.getInstance().getAllJdks()) {
-            if(sdk.getHomePath().equals(RoboVmPlugin.getSdkHome().getAbsolutePath())) {
-                found = true;
-                break;
-            }
-        }
-        if(found) return;
+        if(RoboVmPlugin.getSdk() != null) return;
 
         Sdk jdk = findBestJdk();
         if(jdk == null) {
@@ -174,4 +167,6 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
         }
         return bestJdk;
     }
+
+
 }

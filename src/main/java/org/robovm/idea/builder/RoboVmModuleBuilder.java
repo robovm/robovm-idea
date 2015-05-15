@@ -85,17 +85,8 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         // we set the compiler output path to be inside the robovm-build dir
         File outputDir = RoboVmPlugin.getModuleClassesDir(getContentEntryPath());
         setCompilerOutputPath(outputDir.getAbsolutePath());
-
-        // set the RoboVM SDK instead of a JDK, but only if
-        // there's no build system involved
-        if(buildSystem == BuildSystem.None) {
-            for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
-                if (sdk.getHomePath().equals(RoboVmPlugin.getSdkHome().getAbsolutePath())) {
-                    myJdk = sdk;
-                    break;
-                }
-            }
-        } else {
+        myJdk = RoboVmPlugin.getSdk();
+        if(myJdk == null) {
             myJdk = RoboVmSdkType.findBestJdk();
         }
         rootModel.getModuleExtension(LanguageLevelModuleExtension.class).setLanguageLevel(LanguageLevel.HIGHEST);

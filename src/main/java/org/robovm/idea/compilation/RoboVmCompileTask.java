@@ -186,8 +186,8 @@ public class RoboVmCompileTask implements CompileTask {
 
             // setup classpath entries, debug build parameters and target
             // parameters, e.g. signing identity etc.
-            Set<File> bc = configureClassAndSourcepaths(context, builder, module);
-            configureDebugging(builder, runConfig, module, bc);
+            configureClassAndSourcepaths(context, builder, module);
+            configureDebugging(builder, runConfig, module);
             configureTarget(builder, runConfig);
 
             // clean build dir
@@ -235,7 +235,7 @@ public class RoboVmCompileTask implements CompileTask {
         return true;
     }
 
-    private Set<File> configureClassAndSourcepaths(CompileContext context, Config.Builder builder, Module module) {
+    private void configureClassAndSourcepaths(CompileContext context, Config.Builder builder, Module module) {
         // gather the boot and user classpaths. RoboVM RT libs may be
         // specified in a Maven/Gradle build file, in which case they'll
         // turn up as order entries. We filter them out here.
@@ -267,52 +267,36 @@ public class RoboVmCompileTask implements CompileTask {
             builder.addClasspathEntry(path);
         }
 
-        // check if we have a RoboVM RT jar in the classpath,
-        // remove it from there and add it to the bootclasspath
-        // otherwise we use the SDK assigned to the module
-        builder.skipRuntimeLib(true);
-        if(!bootClassPaths.isEmpty()) {
-            for(File path: bootClassPaths) {
-                RoboVmPlugin.logInfo("boot classpath entry: %s", path);
-                if(RoboVmPlugin.isBootClasspathLibrary(path)) {
-                    builder.addBootClasspathEntry(path);
-                } else {
-                    builder.addClasspathEntry(path);
-                }
-            }
-        } else {
-            RoboVmPlugin.logInfo("Using SDK boot classpath");
-            for(File path: RoboVmPlugin.getSdkLibraries()) {
-                if(RoboVmPlugin.isBootClasspathLibrary(path)) {
-                    builder.addBootClasspathEntry(path);
-                } else {
-                    builder.addClasspathEntry(path);
-                }
+        // Use the RT from the SDK
+        RoboVmPlugin.logInfo("Using SDK boot classpath");
+        for(File path: RoboVmPlugin.getSdkLibraries()) {
+            if(RoboVmPlugin.isBootClasspathLibrary(path)) {
+                builder.addBootClasspathEntry(path);
+            } else {
+                builder.addClasspathEntry(path);
             }
         }
-
-        return bootClassPaths;
     }
 
-    private void configureDebugging(Config.Builder builder, RoboVmRunConfiguration runConfig, Module module, Set<File> bootClassPaths) {
+    private void configureDebugging(Config.Builder builder, RoboVmRunConfiguration runConfig, Module module) {
         // setup debug configuration if necessary
         if(runConfig.isDebug()) {
+            Set<String> sourcesPaths = new HashSet<String>();
+
             // source paths of dependencies and modules
             OrderRootsEnumerator sources = ModuleRootManager.getInstance(module).orderEntries().recursively().withoutSdk().sources();
-            Set<String> sourcesPaths = new HashSet<String>();
             for (String path : sources.getPathsList().getPathList()) {
                 RoboVmPlugin.logInfo("source path entry: %s", path);
                 sourcesPaths.add(path);
             }
 
-            // SDK library source paths, only if not provided as a dependency
-            if(bootClassPaths.isEmpty()) {
-                for(File path: RoboVmPlugin.getSdkLibrarySources()) {
-                    sourcesPaths.add(path.getAbsolutePath());
-                }
+            StringBuilder b = new StringBuilder();
+            // SDK sourcepaths
+            for(File path: RoboVmPlugin.getSdkLibrarySources()) {
+                b.append(path.getAbsolutePath());
+                b.append(":");
             }
 
-            StringBuilder b = new StringBuilder();
             for(String path: sourcesPaths) {
                 b.append(path);
                 b.append(":");

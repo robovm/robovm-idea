@@ -52,6 +52,9 @@
         <component>
             <implementation-class>org.robovm.idea.interfacebuilder.IBIntegratorModuleComponent</implementation-class>
         </component>
+        <component>
+            <implementation-class>org.robovm.idea.components.RoboVmSdkUpdateComponent</implementation-class>
+        </component>
     </module-components>
 
     <actions>

@@ -27,6 +27,8 @@ import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.roots.OrderEnumerator;
 import com.intellij.openapi.ui.MessageType;
@@ -227,6 +229,16 @@ public class RoboVmPlugin {
 
     public static File getSdkHomeBase() {
         return new File(System.getProperty("user.home"), ".robovm-sdks");
+    }
+
+    public static Sdk getSdk() {
+        RoboVmSdkType sdkType = new RoboVmSdkType();
+        for(Sdk sdk: ProjectJdkTable.getInstance().getAllJdks()) {
+            if(sdkType.suggestSdkName(null, null).equals(sdk.getName())) {
+                return sdk;
+            }
+        }
+        return null;
     }
 
     private static void extractArchive(String archive, File dest) {

@@ -15,11 +15,11 @@
     <orderEntry type="library" name="JDOM" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-compress:1.5" level="project" />
     <orderEntry type="library" name="Maven: org.tukaani:xz:1.2" level="project" />
-    <orderEntry type="library" name="Maven: org.robovm:robovm-templater:1.1.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="robovm-templater" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.11" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
-    <orderEntry type="library" name="Maven: org.robovm:robovm-compiler:1.1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: commons-io:commons-io:2.4" level="project" />
+    <orderEntry type="library" name="Maven: org.robovm:robovm-compiler:1.2.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.3.2" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.plist:dd-plist:1.16" level="project" />
@@ -28,9 +28,9 @@
     <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15on:1.49" level="project" />
     <orderEntry type="library" name="Maven: com.googlecode.json-simple:json-simple:1.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.ow2.asm:asm-debug-all:5.0.3" level="project" />
-    <orderEntry type="library" name="Maven: org.robovm:robovm-llvm:1.1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: org.robovm:robovm-libimobiledevice:1.1.1-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: com.robovm:robovm-lm:1.1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.robovm:robovm-llvm:1.2.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.robovm:robovm-libimobiledevice:1.2.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.robovm:robovm-lm:1.2.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.1.0" level="project" />
     <orderEntry type="module" module-name="robovm-debug-info-plugin" />
     <orderEntry type="library" name="Maven: org.zeroturnaround:zt-zip:1.7" level="project" />
@@ -47,6 +47,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Maven: com.robovm:robovm-ib-integrator:1.1.1-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: com.robovm:robovm-ib-integrator:1.2.1-SNAPSHOT" level="project" />
   </component>
 </module>

@@ -27,6 +27,10 @@ import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.idea.RoboVmPlugin;
 
 import javax.swing.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<RoboVmRunConfiguration> {
     public static final String SKIP_SIGNING = "Don't sign";
@@ -70,7 +74,14 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
     private void populateControls(RoboVmRunConfiguration config) {
         // populate with RoboVM Sdk modules
         this.module.removeAllItems();
-        for(Module module: RoboVmPlugin.getRoboVmModules(config.getProject())) {
+        List<Module> roboVmModules = RoboVmPlugin.getRoboVmModules(config.getProject());
+        Collections.sort(roboVmModules, new Comparator<Module>() {
+            @Override
+            public int compare(Module o1, Module o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        for(Module module: roboVmModules) {
             this.module.addItem(module.getName());
             if(module.getName().equals(config.getModuleName())) {
                 this.module.setSelectedIndex(this.module.getItemCount() - 1);

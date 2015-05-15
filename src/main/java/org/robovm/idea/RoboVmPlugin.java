@@ -323,7 +323,7 @@ public class RoboVmPlugin {
         }
     }
 
-    public static Collection<Module> getRoboVmModules(Project project) {
+    public static List<Module> getRoboVmModules(Project project) {
         List<Module> validModules = new ArrayList<Module>();
         for (Module module : ModuleManager.getInstance(project).getModules()) {
             if (isRoboVmModule(module)) {

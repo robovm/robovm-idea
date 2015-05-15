@@ -33,6 +33,9 @@ import org.robovm.idea.RoboVmPlugin;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by badlogic on 25/03/15.
@@ -66,7 +69,14 @@ public class RoboVmConsoleRunConfigurationSettingsEditor extends SettingsEditor<
     private void populateControls(final RoboVmRunConfiguration config) {
         // populate with RoboVM Sdk modules
         this.module.removeAllItems();
-        for(Module module: RoboVmPlugin.getRoboVmModules(config.getProject())) {
+        List<Module> roboVmModules = RoboVmPlugin.getRoboVmModules(config.getProject());
+        Collections.sort(roboVmModules, new Comparator<Module>() {
+            @Override
+            public int compare(Module o1, Module o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        for(Module module: roboVmModules) {
             this.module.addItem(module.getName());
             if(module.getName().equals(config.getModuleName())) {
                 this.module.setSelectedIndex(this.module.getItemCount() - 1);

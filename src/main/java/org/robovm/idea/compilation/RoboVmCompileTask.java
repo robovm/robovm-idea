@@ -258,7 +258,7 @@ public class RoboVmCompileTask implements CompileTask {
         // FIXME junit needs to include test output directories
         for(Module mod: context.getCompileScope().getAffectedModules()) {
             String path = CompilerPaths.getModuleOutputPath(mod, false);
-            if(path != null && path.isEmpty()) {
+            if(path != null && !path.isEmpty()) {
                 classPaths.add(new File(path));
             } else {
                 RoboVmPlugin.logWarn("Output path of module %s not defined", mod.getName());

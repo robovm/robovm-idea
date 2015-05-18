@@ -16,14 +16,14 @@
  */
 package org.robovm.idea.components;
 
+import com.intellij.ProjectTopics;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ModifiableRootModel;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.ModuleRootModificationUtil;
+import com.intellij.openapi.roots.*;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.idea.RoboVmPlugin;
 
@@ -34,43 +34,56 @@ public class RoboVmSdkUpdateComponent implements ModuleComponent {
     private final Module module;
     private final Project project;
 
-    public RoboVmSdkUpdateComponent(Module module, Project project) {
+    public RoboVmSdkUpdateComponent(Module module, final Project project) {
         this.module = module;
         this.project = project;
+
+        // register a listener on root model changes
+        project.getMessageBus().connect().subscribe(ProjectTopics.PROJECT_ROOTS, new ModuleRootAdapter() { public void rootsChanged(ModuleRootEvent event) {
+            for(Module module: ModuleManager.getInstance(project).getModules()) {
+                updateModule(module);
+            }
+        } });
     }
 
     @Override
     public void projectOpened() {
-
     }
 
     @Override
     public void projectClosed() {
-
     }
 
     @Override
     public void moduleAdded() {
-        if(!RoboVmPlugin.isRoboVmModule(module)) {
+        updateModule(module);
+    }
+
+    private void updateModule(final Module moduleToUpdate) {
+        if(!RoboVmPlugin.isRoboVmModule(moduleToUpdate)) {
             return;
         }
-        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
             @Override
             public void run() {
-                ModuleRootManager manager = ModuleRootManager.getInstance(module);
-                ModifiableRootModel model = manager.getModifiableModel();
-                Sdk sdk = RoboVmPlugin.getSdk();
-                if (sdk != null) {
-                    model.setSdk(sdk);
-                    model.commit();
-                }
+                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        ModuleRootManager manager = ModuleRootManager.getInstance(moduleToUpdate);
+                        ModifiableRootModel model = manager.getModifiableModel();
+                        Sdk sdk = RoboVmPlugin.getSdk();
+                        if (sdk != null && !sdk.equals(model.getSdk())) {
+                            model.setSdk(sdk);
+                            model.commit();
+                        }
+                    }
+                });
             }
         });
     }
 
     @Override
     public void initComponent() {
-
     }
 
     @Override

@@ -11,7 +11,7 @@ An IDEA plugin not based on the Gradle, but fully integrated with the compiler &
 * Open Intellij IDEA CE 14, setup the IDEA sdk pointing it at your IDEA installation. Also add the JARs from `plugins/maven/lib` and `plugins/gradle/lib` to the SDK.
 * Open the project by selecting it's POM. Make sure to use the development Maven profile! It will be recognized as a plugin project
 * Open File -> Project Structure, Click on the Project menu entry, and select the IDEA sdk under Project SDK
-* In the same dialog, click on Modules, select the org.robovm.idea module, then click the Plugin Deployment tab, and make sure the Path to META-INF/plugin.xml ends with src/resources
+* In the same dialog, click on Modules, select the org.robovm.idea module, then click the Plugin Deployment tab, and make sure the Path to META-INF/plugin.xml ends with src/main/resources
 * Click OK
 * Optionally import the robovm-compiler, robovm-debug-XXX projects as modules. IDEA will resolve the dependencies to those modules so you can debug and code hotswap the compiler and debugger!
 * Create a new run configuration, using the Plugin run config type. Set the module. Happy coding.

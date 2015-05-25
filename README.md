@@ -3,6 +3,7 @@ RoboVM Intellij IDEA Plugin
 An IDEA plugin not based on the Gradle, but fully integrated with the compiler & debugger toolchain.
 
 ### Development
+* Make sure you have JAVA_HOME set when running IDEA!
 * Install the latest Intellij IDEA Community Edition 14 under /Applications/Intellij IDEA 14 CE.app/
 * Install this plugin, it allows us to use Maven for plugin development https://plugins.jetbrains.com/plugin/7127?pr=
 * Clone this repo https://github.com/JetBrains/intellij-community.git

@@ -116,6 +116,22 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
             }
         }
 
+        // set default simulator type and arch
+        if(config.getSimArch() == null) {
+            for (int i = 0; i < simArch.getItemCount(); i++) {
+                if (simArch.getItemAt(i).toString().equals("x86_64")) {
+                    simArch.setSelectedIndex(i);
+                    break;
+                }
+            }
+            for(int i = 0; i < simType.getItemCount(); i++) {
+                if(simType.getItemAt(i).toString().startsWith("iPhone-6 ")) {
+                    simType.setSelectedIndex(i);
+                    break;
+                }
+            }
+        }
+
         // populate signing identities
         signingIdentity.removeAllItems();
         signingIdentity.addItem(AUTO_SIGNING_IDENTITY);

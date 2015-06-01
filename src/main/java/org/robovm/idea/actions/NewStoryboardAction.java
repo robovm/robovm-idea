@@ -58,7 +58,7 @@ public class NewStoryboardAction extends AnAction {
         if(dialog.getExitCode() == DialogWrapper.OK_EXIT_CODE) {
             IBIntegratorProxy proxy = IBIntegratorManager.getInstance().getProxy(module);
             if(proxy == null) {
-                RoboVmPlugin.logError("Couldn't get interface builder integrator for module %s", module.getName());
+                RoboVmPlugin.logError(e.getProject(), "Couldn't get interface builder integrator for module %s", module.getName());
             } else {
                 File resourceDir = new File(file.getCanonicalPath());
                 proxy.newIOSStoryboard(dialog.getStoryboardName(), resourceDir);
@@ -72,7 +72,7 @@ public class NewStoryboardAction extends AnAction {
     public void update(AnActionEvent e) {
         Presentation presentation = getTemplatePresentation();
         VirtualFile file = CommonDataKeys.VIRTUAL_FILE.getData(e.getDataContext());
-        if(file == null || !file.isDirectory() || (module = RoboVmPlugin.isRoboVmModuleResourcePath(file)) == null) {
+        if(file == null || !file.isDirectory() || (module = RoboVmPlugin.isRoboVmModuleResourcePath(e.getProject(), file)) == null) {
             presentation.setEnabled(false);
             presentation.setVisible(false);
             return;

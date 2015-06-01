@@ -143,7 +143,7 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
                     Sdk sdk = ProjectJdkTable.getInstance().createSdk(sdkType.suggestSdkName(null, null), sdkType);
                     sdkType.setupSdkRoots(sdk, findBestJdk());
                     ProjectJdkTable.getInstance().addJdk(sdk);
-                    RoboVmPlugin.logInfo("Added new SDK " + sdk.getName());
+                    RoboVmPlugin.logInfo(null, "Added new SDK " + sdk.getName());
                 }
             });
         }

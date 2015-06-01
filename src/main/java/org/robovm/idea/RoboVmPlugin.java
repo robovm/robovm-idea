@@ -57,6 +57,7 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -65,9 +66,8 @@ import java.util.zip.GZIPInputStream;
  */
 public class RoboVmPlugin {
     private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
-    static volatile Project project;
-    static volatile ConsoleView consoleView;
-    static volatile ToolWindow toolWindow;
+    static volatile Map<Project, ConsoleView> consoleViews = new ConcurrentHashMap<>();
+    static volatile Map<Project, ToolWindow> toolWindows = new ConcurrentHashMap<>();
     static final List<UnprintedMessage> unprintedMessages = new ArrayList<UnprintedMessage>();
 
     static class UnprintedMessage {
@@ -80,7 +80,7 @@ public class RoboVmPlugin {
         }
     }
 
-    public static void logBalloon(final MessageType messageType, final String message) {
+    public static void logBalloon(final Project project, final MessageType messageType, final String message) {
         UIUtil.invokeLaterIfNeeded(new Runnable() {
             @Override
             public void run() {
@@ -91,35 +91,36 @@ public class RoboVmPlugin {
         });
     }
 
-    public static void logInfo(String format, Object... args) {
-        log(ConsoleViewContentType.SYSTEM_OUTPUT, "[INFO] " + format, args);
+    public static void logInfo(Project project, String format, Object... args) {
+        log(project, ConsoleViewContentType.SYSTEM_OUTPUT, "[INFO] " + format, args);
     }
 
-    public static void logError(String format, Object... args) {
-        log(ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] " + format, args);
+    public static void logError(Project project, String format, Object... args) {
+        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] " + format, args);
     }
 
-    public static void logErrorThrowable(String s, Throwable t, boolean showBalloon) {
+    public static void logErrorThrowable(Project project, String s, Throwable t, boolean showBalloon) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter writer = new PrintWriter(stringWriter);
         t.printStackTrace(writer);
-        log(ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] %s\n%s", s, stringWriter.toString());
-        logBalloon(MessageType.ERROR, s);
+        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[ERROR] %s\n%s", s, stringWriter.toString());
+        logBalloon(project, MessageType.ERROR, s);
     }
 
-    public static void logWarn(String format, Object... args) {
-        log(ConsoleViewContentType.ERROR_OUTPUT, "[WARNING] " + format, args);
+    public static void logWarn(Project project, String format, Object... args) {
+        log(project, ConsoleViewContentType.ERROR_OUTPUT, "[WARNING] " + format, args);
     }
 
-    public static void logDebug(String format, Object... args) {
-        log(ConsoleViewContentType.NORMAL_OUTPUT, "[DEBUG] " + format, args);
+    public static void logDebug(Project project, String format, Object... args) {
+        log(project, ConsoleViewContentType.NORMAL_OUTPUT, "[DEBUG] " + format, args);
     }
 
-    private static void log(final ConsoleViewContentType type, String format, Object... args) {
+    private static void log(final Project project, final ConsoleViewContentType type, String format, Object... args) {
         final String s = String.format(format, args) + "\n";
         UIUtil.invokeLaterIfNeeded(new Runnable() {
             @Override
             public void run() {
+                ConsoleView consoleView = project == null? null: consoleViews.get(project);
                 if (consoleView != null) {
                     for (UnprintedMessage unprinted : unprintedMessages) {
                         consoleView.print(unprinted.string, unprinted.type);
@@ -138,34 +139,31 @@ public class RoboVmPlugin {
         });
     }
 
-    public static Logger getLogger() {
+    public static Logger getLogger(final Project project) {
         return new Logger() {
             @Override
             public void debug(String s, Object... objects) {
-                logDebug(s, objects);
+                logDebug(project, s, objects);
             }
 
             @Override
             public void info(String s, Object... objects) {
-                logInfo(s, objects);
+                logInfo(project, s, objects);
             }
 
             @Override
             public void warn(String s, Object... objects) {
-                logWarn(s, objects);
+                logWarn(project, s, objects);
             }
 
             @Override
             public void error(String s, Object... objects) {
-                logError(s, objects);
+                logError(project, s, objects);
             }
         };
     }
 
     public static void initializeProject(final Project project) {
-        // store the project, we may need it later
-        RoboVmPlugin.project = project;
-
         // setup a compile task if there isn't one yet
         boolean found = false;
         for (CompileTask task : CompilerManager.getInstance(project).getAfterTasks()) {
@@ -190,21 +188,24 @@ public class RoboVmPlugin {
                 if (project.isDisposed()) {
                     return;
                 }
-                toolWindow = ToolWindowManager.getInstance(project).registerToolWindow(ROBOVM_TOOLWINDOW_ID, false, ToolWindowAnchor.BOTTOM, project, true);
-                consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
+                ToolWindow toolWindow = ToolWindowManager.getInstance(project).registerToolWindow(ROBOVM_TOOLWINDOW_ID, false, ToolWindowAnchor.BOTTOM, project, true);
+                ConsoleView consoleView = TextConsoleBuilderFactory.getInstance().createBuilder(project).getConsole();
                 Content content = toolWindow.getContentManager().getFactory().createContent(consoleView.getComponent(), "Console", true);
                 toolWindow.getContentManager().addContent(content);
                 toolWindow.setIcon(RoboVmIcons.ROBOVM_SMALL);
-                logInfo("RoboVM plugin initialized");
+                consoleViews.put(project, consoleView);
+                toolWindows.put(project, toolWindow);
+                logInfo(project, "RoboVM plugin initialized");
             }
         });
     }
 
     public static void unregisterProject(Project project) {
+        ConsoleView consoleView = consoleViews.remove(project);
         if (consoleView != null) {
             consoleView.dispose();
         }
-        consoleView = null;
+        toolWindows.remove(project);
         ToolWindowManager.getInstance(project).unregisterToolWindow(ROBOVM_TOOLWINDOW_ID);
     }
 
@@ -212,7 +213,7 @@ public class RoboVmPlugin {
         File sdkHome = getSdkHomeBase();
         if (!sdkHome.exists()) {
             if (!sdkHome.mkdirs()) {
-                logError("Couldn't create sdk dir in %s", sdkHome.getAbsolutePath());
+                logError(null, "Couldn't create sdk dir in %s", sdkHome.getAbsolutePath());
                 throw new RuntimeException("Couldn't create sdk dir in " + sdkHome.getAbsolutePath());
             }
         }
@@ -266,14 +267,14 @@ public class RoboVmPlugin {
                     }
                 }
             }
-            logInfo("Installed RoboVM SDK %s to %s", Version.getVersion(), dest.getAbsolutePath());
+            logInfo(null, "Installed RoboVM SDK %s to %s", Version.getVersion(), dest.getAbsolutePath());
 
             // make all files in bin executable
             for (File file : new File(getSdkHome(), "bin").listFiles()) {
                 file.setExecutable(true);
             }
         } catch (Throwable t) {
-            logError("Couldn't extract SDK to %s", dest.getAbsolutePath());
+            logError(null, "Couldn't extract SDK to %s", dest.getAbsolutePath());
             throw new RuntimeException("Couldn't extract SDK to " + dest.getAbsolutePath(), t);
         } finally {
             IOUtils.closeQuietly(in);
@@ -371,16 +372,19 @@ public class RoboVmPlugin {
         return false;
     }
 
-    public static void focusToolWindow() {
+    public static void focusToolWindow(final Project project) {
         UIUtil.invokeLaterIfNeeded(new Runnable() {
             @Override
             public void run() {
-                toolWindow.show(new Runnable() {
-                    @Override
-                    public void run() {
+                ToolWindow toolWindow = toolWindows.get(project);
+                if(toolWindow != null) {
+                    toolWindow.show(new Runnable() {
+                        @Override
+                        public void run() {
 
-                    }
-                });
+                        }
+                    });
+                }
             }
         });
     }
@@ -436,7 +440,7 @@ public class RoboVmPlugin {
             configBuilder.home(RoboVmPlugin.getRoboVmHome());
             configBuilder.addClasspathEntry(new File(".")); // Fake a classpath to make Config happy
             configBuilder.skipLinking(true);
-            RoboVmCompileTask.loadConfig(configBuilder, moduleBaseDir, false);
+            RoboVmCompileTask.loadConfig(module.getProject(), configBuilder, moduleBaseDir, false);
             Config config = configBuilder.build();
             Set<File> paths = new HashSet<>();
             for (Resource r : config.getResources()) {
@@ -456,11 +460,7 @@ public class RoboVmPlugin {
         }
     }
 
-    public static Module isRoboVmModuleResourcePath(VirtualFile file) {
-        if(project == null) {
-            return null;
-        }
-
+    public static Module isRoboVmModuleResourcePath(Project project, VirtualFile file) {
         try {
             // using reflection here as building the config takes an
             // immense amount of time
@@ -496,7 +496,7 @@ public class RoboVmPlugin {
             // Fake a classpath to make Config happy
             configBuilder.addClasspathEntry(new File("."));
             configBuilder.skipLinking(true);
-            RoboVmCompileTask.loadConfig(configBuilder, projectRoot, false);
+            RoboVmCompileTask.loadConfig(module.getProject(), configBuilder, projectRoot, false);
             Config config = configBuilder.build();
             InfoPList iosInfoPList = config.getIosInfoPList();
             if(iosInfoPList != null) return iosInfoPList.getFile();

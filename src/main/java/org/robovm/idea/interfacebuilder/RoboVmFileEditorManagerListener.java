@@ -31,7 +31,7 @@ public class RoboVmFileEditorManagerListener implements FileEditorManagerListene
         if(!"storyboard".equals(file.getExtension())) {
             return;
         }
-        RoboVmPlugin.logInfo("File opened: " + file.getCanonicalPath());
+        RoboVmPlugin.logInfo(project, "File opened: " + file.getCanonicalPath());
         Module module = null;
         for(Module m: ModuleManager.getInstance(project).getModules()) {
             if(ModuleRootManager.getInstance(m).getFileIndex().isInContent(file)) {

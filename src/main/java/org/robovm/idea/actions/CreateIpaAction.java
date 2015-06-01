@@ -39,7 +39,7 @@ import java.util.List;
 public class CreateIpaAction extends AnAction {
     public static final Key<IpaConfig> IPA_CONFIG_KEY = Key.create("IPA_CONFIG");
 
-    public void actionPerformed(AnActionEvent e) {
+    public void actionPerformed(final AnActionEvent e) {
         final CreateIpaDialog dialog = new CreateIpaDialog(e.getProject());
         dialog.show();
         if(dialog.getExitCode() == DialogWrapper.OK_EXIT_CODE) {
@@ -50,7 +50,7 @@ public class CreateIpaAction extends AnAction {
             CompilerManager.getInstance(e.getProject()).compile(scope, new CompileStatusNotification() {
                 @Override
                 public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
-                    RoboVmPlugin.logInfo("IPA creation complete, %d errors, %d warnings", errors, warnings);
+                    RoboVmPlugin.logInfo(e.getProject(), "IPA creation complete, %d errors, %d warnings", errors, warnings);
                 }
             });
         }

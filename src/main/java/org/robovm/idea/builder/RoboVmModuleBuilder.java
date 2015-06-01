@@ -109,7 +109,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         templater.mainClass(packageName + "." + mainClassName);
         templater.packageName(packageName);
         templater.buildProject(new File(contentRoot.getCanonicalPath()));
-        RoboVmPlugin.logInfo("Project created in %s", contentRoot.getCanonicalPath());
+        RoboVmPlugin.logInfo(rootModel.getProject(), "Project created in %s", contentRoot.getCanonicalPath());
         applyBuildSystem(project, rootModel, contentRoot);
         contentRoot.refresh(false, true);
 

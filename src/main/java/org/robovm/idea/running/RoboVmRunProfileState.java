@@ -51,7 +51,7 @@ public class RoboVmRunProfileState extends CommandLineState {
         RoboVmRunConfiguration runConfig = (RoboVmRunConfiguration)getEnvironment().getRunnerAndConfigurationSettings().getConfiguration();
         Config config = runConfig.getConfig();
         AppCompiler compiler = runConfig.getCompiler();
-        RoboVmPlugin.logInfo("Launching executable");
+        RoboVmPlugin.logInfo(getEnvironment().getProject(), "Launching executable");
         String mainTypeName = config.getMainClass();
 
         LaunchParameters launchParameters = config.getTarget().createLaunchParameters();
@@ -76,7 +76,7 @@ public class RoboVmRunProfileState extends CommandLineState {
             }
             process = new ProcessProxy(process, pipedOut, stdoutStream, stderrStream, compiler);
         }
-        RoboVmPlugin.logInfo("Launch done");
+        RoboVmPlugin.logInfo(getEnvironment().getProject(), "Launch done");
 
         final OSProcessHandler processHandler = new ColoredProcessHandler(process, null);
         ProcessTerminatedListener.attach(processHandler);
@@ -115,7 +115,7 @@ public class RoboVmRunProfileState extends CommandLineState {
                 return null;
             }
         } catch(Throwable t) {
-            RoboVmPlugin.logErrorThrowable("Couldn't start application", t, true);
+            RoboVmPlugin.logErrorThrowable(getEnvironment().getProject(), "Couldn't start application", t, true);
             return null;
         }
     }

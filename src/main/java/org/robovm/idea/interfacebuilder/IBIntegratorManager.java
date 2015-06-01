@@ -42,7 +42,7 @@ public class IBIntegratorManager {
             hasIBIntegrator = true;
         } catch (Throwable t) {
             hasIBIntegrator = false;
-            RoboVmPlugin.logWarn(t.getMessage());
+            RoboVmPlugin.logWarn(null, t.getMessage());
         }
     }
 
@@ -68,12 +68,12 @@ public class IBIntegratorManager {
         if(proxy == null) {
             try {
                 File buildDir = RoboVmPlugin.getModuleXcodeDir(module);
-                RoboVmPlugin.logInfo("Starting Interface Builder integrator daemon for module %s", module.getName());
-                proxy = new IBIntegratorProxy(RoboVmPlugin.getRoboVmHome(), RoboVmPlugin.getLogger(), module.getName(), buildDir);
+                RoboVmPlugin.logInfo(module.getProject(), "Starting Interface Builder integrator daemon for module %s", module.getName());
+                proxy = new IBIntegratorProxy(RoboVmPlugin.getRoboVmHome(), RoboVmPlugin.getLogger(module.getProject()), module.getName(), buildDir);
                 proxy.start();
                 daemons.put(module.getName(), proxy);
             } catch (Throwable e) {
-                RoboVmPlugin.logWarn("Failed to start Interface Builder integrator for module " + module.getName() + ": " + e.getMessage());
+                RoboVmPlugin.logWarn(module.getProject(), "Failed to start Interface Builder integrator for module " + module.getName() + ": " + e.getMessage());
             }
         }
 
@@ -114,7 +114,7 @@ public class IBIntegratorManager {
         if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
             return;
         }
-        RoboVmPlugin.logInfo("Stopping Interface Builder integrator daemon for module %s", module.getName());
+        RoboVmPlugin.logInfo(module.getProject(), "Stopping Interface Builder integrator daemon for module %s", module.getName());
     }
 
     public void removeAllDaemons() {
@@ -124,7 +124,7 @@ public class IBIntegratorManager {
         for(IBIntegratorProxy daemon: daemons.values()) {
             daemon.shutDown();
         }
-        RoboVmPlugin.logInfo("Stopping all Interface Builder integrator daemons");
+        RoboVmPlugin.logInfo(null, "Stopping all Interface Builder integrator daemons");
     }
 
     public IBIntegratorProxy getProxy(Module module) {

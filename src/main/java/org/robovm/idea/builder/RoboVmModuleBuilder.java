@@ -33,6 +33,7 @@ import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
@@ -86,7 +87,9 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         if(myJdk == null) {
             myJdk = RoboVmSdkType.findBestJdk();
         }
-        rootModel.getModuleExtension(LanguageLevelModuleExtension.class).setLanguageLevel(LanguageLevel.HIGHEST);
+        Sdk jdk = RoboVmSdkType.findBestJdk();
+        LanguageLevel langLevel = ((JavaSdk)jdk.getSdkType()).getVersion(jdk).getMaxLanguageLevel();
+        rootModel.getModuleExtension(LanguageLevelModuleExtension.class).setLanguageLevel(langLevel);
         super.setupRootModel(rootModel);
 
         // set a project jdk if none is set

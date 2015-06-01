@@ -35,10 +35,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.roots.ContentEntry;
-import com.intellij.openapi.roots.LanguageLevelModuleExtension;
-import com.intellij.openapi.roots.ModifiableRootModel;
-import com.intellij.openapi.roots.SourceFolder;
+import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -91,6 +88,12 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         }
         rootModel.getModuleExtension(LanguageLevelModuleExtension.class).setLanguageLevel(LanguageLevel.HIGHEST);
         super.setupRootModel(rootModel);
+
+        // set a project jdk if none is set
+        ProjectRootManager manager = ProjectRootManager.getInstance(rootModel.getProject());
+        if(manager.getProjectSdk() == null) {
+            manager.setProjectSdk(RoboVmSdkType.findBestJdk());
+        }
 
         // extract the template files and setup the source
         // folders

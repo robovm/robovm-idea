@@ -19,6 +19,8 @@ package org.robovm.idea.components;
 import com.intellij.openapi.components.ApplicationComponent;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.sdk.JdkSetupDialog;
+import org.robovm.idea.sdk.RoboVmSdkType;
 
 /**
  * Call on app startup, responsible for extracting/updating the

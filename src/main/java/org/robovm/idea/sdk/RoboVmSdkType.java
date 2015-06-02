@@ -127,26 +127,27 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
     }
 
     public static void createSdkIfNotExists() {
+        // make sure a JDK is configured
+        Sdk jdk = findBestJdk();
+        if(jdk == null) {
+            new JdkSetupDialog().show();
+        }
+
         // check if a RoboVM SDK already exists
         // for our version
         if(RoboVmPlugin.getSdk() != null) return;
 
-        Sdk jdk = findBestJdk();
-        if(jdk == null) {
-            Messages.showMessageDialog("Couldn't setup RoboVM SDK.\nPlease configure a JDK first, then restart Intellij IDEA/Android Studio.\nSee https://www.jetbrains.com/idea/help/configuring-global-project-and-module-sdks.html", "Error", RoboVmIcons.ROBOVM_LARGE);
-        } else {
-            // if not, create a new SDK
-            ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                @Override
-                public void run() {
-                    RoboVmSdkType sdkType = new RoboVmSdkType();
-                    Sdk sdk = ProjectJdkTable.getInstance().createSdk(sdkType.suggestSdkName(null, null), sdkType);
-                    sdkType.setupSdkRoots(sdk, findBestJdk());
-                    ProjectJdkTable.getInstance().addJdk(sdk);
-                    RoboVmPlugin.logInfo(null, "Added new SDK " + sdk.getName());
-                }
-            });
-        }
+        // if not, create a new SDK
+        ApplicationManager.getApplication().runWriteAction(new Runnable() {
+            @Override
+            public void run() {
+                RoboVmSdkType sdkType = new RoboVmSdkType();
+                Sdk sdk = ProjectJdkTable.getInstance().createSdk(sdkType.suggestSdkName(null, null), sdkType);
+                sdkType.setupSdkRoots(sdk, findBestJdk());
+                ProjectJdkTable.getInstance().addJdk(sdk);
+                RoboVmPlugin.logInfo(null, "Added new SDK " + sdk.getName());
+            }
+        });
     }
 
     public static Sdk findBestJdk() {

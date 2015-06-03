@@ -17,6 +17,7 @@
 package org.robovm.idea.components;
 
 import com.intellij.ProjectTopics;
+import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleComponent;
@@ -28,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.robovm.idea.RoboVmPlugin;
 
 /**
- * Adds or updates the RoboVM SDK to a module
+ * Adds or updates the RoboVM SDK to a module, sets compiler flags.
  */
 public class RoboVmSdkUpdateComponent implements ModuleComponent {
     private final Module module;
@@ -81,6 +82,9 @@ public class RoboVmSdkUpdateComponent implements ModuleComponent {
                                 model.commit();
                             }
                         }
+
+                        CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(module.getProject());
+                        config.MAKE_PROJECT_ON_SAVE = true;
                     }
                 });
             }

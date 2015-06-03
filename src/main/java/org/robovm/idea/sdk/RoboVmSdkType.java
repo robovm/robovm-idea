@@ -16,21 +16,22 @@
  */
 package org.robovm.idea.sdk;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.projectRoots.*;
-import com.intellij.openapi.projectRoots.impl.JavaDependentSdkType;
-import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.vfs.JarFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
+import java.io.File;
+
+import javax.swing.*;
+
 import org.jdom.Element;
 import org.jetbrains.annotations.Nullable;
 import org.robovm.compiler.Version;
 import org.robovm.idea.RoboVmIcons;
 import org.robovm.idea.RoboVmPlugin;
 
-import javax.swing.*;
-import java.io.File;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.projectRoots.*;
+import com.intellij.openapi.projectRoots.impl.JavaDependentSdkType;
+import com.intellij.openapi.roots.OrderRootType;
+import com.intellij.openapi.vfs.JarFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 
 public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
     public static final String SDK_NAME = "RoboVM SDK";

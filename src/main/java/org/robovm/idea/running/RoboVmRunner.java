@@ -16,41 +16,31 @@
  */
 package org.robovm.idea.running;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import com.intellij.debugger.DebugEnvironment;
 import com.intellij.debugger.DebuggerManagerEx;
 import com.intellij.debugger.DefaultDebugUIEnvironment;
 import com.intellij.debugger.engine.DebugProcessImpl;
 import com.intellij.debugger.engine.JavaDebugProcess;
 import com.intellij.debugger.impl.DebuggerSession;
-import com.intellij.debugger.impl.GenericDebuggerRunnerSettings;
-import com.intellij.debugger.settings.DebuggerSettings;
 import com.intellij.debugger.ui.tree.render.BatchEvaluator;
 import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
-import com.intellij.execution.configurations.*;
+import com.intellij.execution.configurations.RemoteConnection;
+import com.intellij.execution.configurations.RunProfile;
+import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.GenericProgramRunner;
-import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.execution.runners.RunContentBuilder;
 import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugProcessStarter;
 import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.XDebuggerManager;
 import com.intellij.xdebugger.impl.XDebugSessionImpl;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.robovm.compiler.AppCompiler;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.target.LaunchParameters;
-import org.robovm.compiler.util.io.Fifos;
-import org.robovm.compiler.util.io.OpenOnReadFileInputStream;
-import org.robovm.idea.RoboVmPlugin;
-import org.robovm.idea.compilation.RoboVmCompileTask;
-
-import java.io.*;
 
 public class RoboVmRunner extends GenericProgramRunner {
 

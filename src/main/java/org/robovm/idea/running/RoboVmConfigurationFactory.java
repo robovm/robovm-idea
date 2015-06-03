@@ -16,6 +16,8 @@
  */
 package org.robovm.idea.running;
 
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import com.intellij.execution.configurations.RunConfiguration;
@@ -29,5 +31,10 @@ public class RoboVmConfigurationFactory extends ConfigurationFactory {
     @Override
     public RunConfiguration createTemplateConfiguration(Project project) {
         return new RoboVmRunConfiguration(getType(), "RoboVM Run Configuration", new RoboVmRunConfigurationSettings(project), this);
+    }
+
+    @Override
+    public boolean isConfigurationSingletonByDefault() {
+        return true;
     }
 }

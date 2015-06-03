@@ -16,9 +16,12 @@
  */
 package org.robovm.idea.running;
 
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.options.ConfigurationException;
-import com.intellij.openapi.options.SettingsEditor;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.swing.*;
+
 import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.target.ios.DeviceType;
@@ -26,11 +29,9 @@ import org.robovm.compiler.target.ios.ProvisioningProfile;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.idea.RoboVmPlugin;
 
-import javax.swing.*;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.options.ConfigurationException;
+import com.intellij.openapi.options.SettingsEditor;
 
 public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<RoboVmRunConfiguration> {
     public static final String SKIP_SIGNING = "Don't sign";

@@ -16,6 +16,7 @@
  */
 package org.robovm.idea.actions;
 
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDialog;
@@ -45,9 +46,15 @@ import java.util.List;
  * Created by badlogic on 01/04/15.
  */
 public class CreateIpaDialog extends DialogWrapper {
+    private static final String MODULE_NAME = "robovm.ipaConfig.moduleName";
+    private static final String SIGNING_IDENTITY = "robovm.ipaConfig.signingIdentity";
+    private static final String PROVISIONING_PROFILE = "robovm.ipaConfig.provisioningProfile";
+    private static final String ARCHS = "robovm.ipaConfig.archs";
+    private static final String DESTINATION_DIR = "robovm.ipaConfig.destinationDir";
+
     private static final String ARCHS_ALL = "All - 32-bit (thumbv7) + 64-bit (arm64)";
     private static final String ARCHS_32BIT = "32-bit (thumbv7)";
-    private static final Object ARCHS_64BIT = "64-bit (arm64)";
+    private static final String ARCHS_64BIT = "64-bit (arm64)";
     private JPanel panel;
     private JComboBox archs;
     private JComboBox signingIdentity;
@@ -66,24 +73,47 @@ public class CreateIpaDialog extends DialogWrapper {
     }
 
     private void populateControls() {
+        PropertiesComponent properties = PropertiesComponent.getInstance(project);
+        String configModule = properties.getValue(MODULE_NAME, "");
+        String configSigning = properties.getValue(SIGNING_IDENTITY, "");
+        String configProvisioning = properties.getValue(PROVISIONING_PROFILE, "");
+        String configDestDir = properties.getValue(DESTINATION_DIR, "");
+        String configArchs = properties.getValue(ARCHS, "");
+
         for(Module module: RoboVmPlugin.getRoboVmModules(project)) {
             this.module.addItem(module.getName());
+            if(module.getName().equals(configModule)) {
+                this.module.setSelectedIndex(this.module.getItemCount()-1);
+            }
         }
 
         // populate signing identities
         for(SigningIdentity identity: SigningIdentity.list()) {
             signingIdentity.addItem(identity.getName());
+            if(identity.getName().equals(configSigning)) {
+                this.signingIdentity.setSelectedIndex(this.signingIdentity.getItemCount()-1);
+            }
         }
 
         // populate provisioning profiles
         for(ProvisioningProfile profile: ProvisioningProfile.list()) {
             provisioningProfile.addItem(profile.getName());
+            if(profile.getName().equals(configProvisioning)) {
+                this.provisioningProfile.setSelectedIndex(this.provisioningProfile.getItemCount()-1);
+            }
         }
 
         // populate architectures
-        archs.addItem(ARCHS_ALL);
-        archs.addItem(ARCHS_32BIT);
-        archs.addItem(ARCHS_64BIT);
+        for(String arch: new String[] { ARCHS_ALL, ARCHS_32BIT, ARCHS_64BIT }) {
+            archs.addItem(arch);
+            if(arch.equals(configProvisioning)) {
+                this.archs.setSelectedIndex(this.archs.getItemCount()-1);
+            }
+        }
+
+        if(!configDestDir.isEmpty()) {
+            destinationDir.setText(configDestDir);
+        }
 
         browseButton.addActionListener(new ActionListener() {
             @Override
@@ -94,13 +124,14 @@ public class CreateIpaDialog extends DialogWrapper {
                             public boolean isFileVisible(VirtualFile file, boolean showHiddenFiles) {
                                 return file.isDirectory();
                             }
+
                             @Override
                             public boolean isFileSelectable(VirtualFile file) {
                                 return file.isDirectory();
                             }
                         }, null, panel);
                 VirtualFile[] dir = fileChooser.choose(project);
-                if(dir != null && dir.length > 0) {
+                if (dir != null && dir.length > 0) {
                     destinationDir.setText(dir[0].getCanonicalPath());
                 }
             }
@@ -139,6 +170,7 @@ public class CreateIpaDialog extends DialogWrapper {
     }
 
     public CreateIpaAction.IpaConfig getIpaConfig() {
+        saveProperties();
         Module module = ModuleManager.getInstance(project).findModuleByName(this.module.getSelectedItem().toString());
         String signingIdentity = this.signingIdentity.getSelectedItem().toString();
         String provisioningProile = this.provisioningProfile.getSelectedItem().toString();
@@ -152,5 +184,14 @@ public class CreateIpaDialog extends DialogWrapper {
             archs.add(Arch.arm64);
         }
         return new CreateIpaAction.IpaConfig(module, new File(this.destinationDir.getText()), signingIdentity, provisioningProile, archs);
+    }
+
+    private void saveProperties() {
+        PropertiesComponent properties = PropertiesComponent.getInstance(project);
+        properties.setValue(MODULE_NAME, module.getSelectedItem().toString());
+        properties.setValue(SIGNING_IDENTITY, signingIdentity.getSelectedItem().toString());
+        properties.setValue(PROVISIONING_PROFILE, provisioningProfile.getSelectedItem().toString());
+        properties.setValue(ARCHS, archs.getSelectedItem().toString());
+        properties.setValue(DESTINATION_DIR, destinationDir.getText());
     }
 }

@@ -38,6 +38,12 @@
                     <groupId>com.robovm</groupId>
                     <artifactId>robovm-debug-info-plugin</artifactId>
                     <version>${robovm.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.slf4j</groupId>
+                            <artifactId>slf4j-api</artifactId>
+                        </exclusion>
+                    </exclusions>
                 </dependency>
                 <dependency>
                     <groupId>com.robovm</groupId>

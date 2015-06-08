@@ -23,10 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.util.ToolchainUtil;
 import org.robovm.idea.RoboVmPlugin;
-import org.robovm.idea.components.setupwizard.JdkSetupDialog;
-import org.robovm.idea.components.setupwizard.LicenseSetupDialog;
-import org.robovm.idea.components.setupwizard.NoXcodeSetupDialog;
-import org.robovm.idea.components.setupwizard.XcodeSetupDialog;
+import org.robovm.idea.components.setupwizard.*;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
 import java.io.IOException;
@@ -38,6 +35,7 @@ import java.io.IOException;
 public class RoboVmApplicationComponent implements ApplicationComponent {
 
     public static final String ROBOVM_HAS_SHOWN_LICENSE_WIZARD = "robovm.hasShownLicenseWizard";
+    public static final String ROBOVM_HAS_SHOWN_ANDROID_WIZARD = "robovm.hasShownAndroidWizard";
 
     @Override
     public void initComponent() {
@@ -63,9 +61,16 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
             } catch (Throwable e) {
                 new XcodeSetupDialog().show();
             }
+
+            // optionally setup Android SDK, only on Mac OS X
+            if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false) && !AndroidSetupDialog.isAndroidSdkSetup()) {
+                new AndroidSetupDialog().show();
+                // PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
+            }
         } else {
             new NoXcodeSetupDialog().show();
         }
+
         // Ask user to sign up or enter a license key
         if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_LICENSE_WIZARD, false)) {
             new LicenseSetupDialog().show();

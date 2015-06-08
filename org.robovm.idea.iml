@@ -32,7 +32,6 @@
     <orderEntry type="library" name="Maven: net.java.dev.jna:jna:4.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.robovm:robovm-debug-info-plugin:1.3.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.zeroturnaround:zt-zip:1.7" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.6.6" level="project" />
     <orderEntry type="library" name="Maven: com.robovm:robovm-debug-instrument-plugin:1.3.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.robovm:robovm-debug-server:1.3.1-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.badlogicgames:jdwp-analyzer:1.1" level="project" />

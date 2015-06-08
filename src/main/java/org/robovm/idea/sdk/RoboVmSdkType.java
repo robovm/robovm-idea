@@ -128,12 +128,6 @@ public class RoboVmSdkType extends JavaDependentSdkType implements JavaSdkType {
     }
 
     public static void createSdkIfNotExists() {
-        // make sure a JDK is configured
-        Sdk jdk = findBestJdk();
-        if(jdk == null) {
-            new JdkSetupDialog().show();
-        }
-
         // check if a RoboVM SDK already exists
         // for our version
         if(RoboVmPlugin.getSdk() != null) return;

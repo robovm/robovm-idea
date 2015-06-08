@@ -1,4 +1,4 @@
-package org.robovm.idea.sdk;
+package org.robovm.idea.components.setupwizard;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.process.ProcessOutput;
@@ -35,13 +35,14 @@ public class JdkSetupDialog extends JDialog {
     private JButton downloadJDKButton;
     private JButton nextButton;
     private JLabel errorLabel;
+    private JPanel header;
 
     public JdkSetupDialog() {
         setContentPane(panel);
         setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        setTitle("Setup JDK");
-        infoText.setText("Please specify the location of your JDK.");
+        setTitle("RoboVM Setup");
+        infoText.setText("<html>RoboVM requires Java Development Kit (JDK) 7.0 or higher.<br><br>Please specify the location of your JDK.");
 
         for(String jdkLocation: JavaSdk.getInstance().suggestHomePaths()) {
             jdkHome.setText(jdkLocation);

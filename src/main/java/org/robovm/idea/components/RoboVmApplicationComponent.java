@@ -16,25 +16,65 @@
  */
 package org.robovm.idea.components;
 
+import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.projectRoots.Sdk;
 import org.jetbrains.annotations.NotNull;
+import org.robovm.compiler.config.OS;
+import org.robovm.compiler.util.ToolchainUtil;
 import org.robovm.idea.RoboVmPlugin;
-import org.robovm.idea.sdk.JdkSetupDialog;
+import org.robovm.idea.components.setupwizard.JdkSetupDialog;
+import org.robovm.idea.components.setupwizard.LicenseSetupDialog;
+import org.robovm.idea.components.setupwizard.NoXcodeSetupDialog;
+import org.robovm.idea.components.setupwizard.XcodeSetupDialog;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
+import java.io.IOException;
+
 /**
- * Call on app startup, responsible for extracting/updating the
- * RoboVM SDK and setting up the SDK so its available in IDEA.
+ * Call on app startup, responsible for extracting/updating the RoboVM SDK and
+ * setting up the SDK so its available in IDEA.
  */
 public class RoboVmApplicationComponent implements ApplicationComponent {
+
+    public static final String ROBOVM_HAS_SHOWN_LICENSE_WIZARD = "robovm.hasShownLicenseWizard";
+
     @Override
     public void initComponent() {
+        displaySetupWizard();
         RoboVmPlugin.extractSdk();
     }
 
-    @Override
-    public void disposeComponent() {
+    private void displaySetupWizard() {
+        // make sure a JDK is configured
+        Sdk jdk = RoboVmSdkType.findBestJdk();
+        if (jdk == null) {
+            new JdkSetupDialog().show();
+        }
+
+        // make sure Xcode is installed
+        // If we are on a Mac, otherwise
+        // inform the user that they
+        // won't be able to compile for
+        // iOS
+        if (OS.getDefaultOS() == OS.macosx) {
+            try {
+                ToolchainUtil.findXcodePath();
+            } catch (Throwable e) {
+                new XcodeSetupDialog().show();
+            }
+        } else {
+            new NoXcodeSetupDialog().show();
+        }
+        // Ask user to sign up or enter a license key
+        if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_LICENSE_WIZARD, false)) {
+            new LicenseSetupDialog().show();
+            PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD, "true");
+        }
     }
+
+    @Override
+    public void disposeComponent() {}
 
     @NotNull
     @Override

@@ -78,5 +78,6 @@
     </actions>
 
     <depends>org.jetbrains.plugins.gradle</depends>
+    <depends>org.jetbrains.android</depends>
 
 </idea-plugin>

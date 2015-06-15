@@ -1,5 +1,6 @@
 package org.robovm.idea.components.setupwizard;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDialog;
 import com.intellij.openapi.fileChooser.FileChooserFactory;
@@ -9,6 +10,8 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import org.jetbrains.android.sdk.AndroidSdkUtils;
+import org.robovm.idea.RoboVmPlugin;
 import org.zeroturnaround.zip.NameMapper;
 import org.zeroturnaround.zip.ZipUtil;
 
@@ -222,12 +225,49 @@ public class AndroidSetupDialog extends JDialog {
                         }
                     });
 
-                    // done with unpacking, let's show the components
-                    // installer wizard
+                    // set all files in tools/ to be executable
+                    // ziputils doesn't preserve file permissions
+                    for(File file: new File(outputDir, "tools").listFiles()) {
+                        if(file.isFile()) {
+                            file.setExecutable(true);
+                        }
+                    }
+
+                    for(File file: new File(outputDir, "tools/proguard/bin").listFiles()) {
+                        if(file.isFile()) {
+                            file.setExecutable(true);
+                        }
+                    }
+
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            System.exit(-1);
+                            label.setText("Installing SDK components");
+                        }
+                    });
+
+                    // done with unpacking, let's show the components
+                    // installer wizard
+                    Process process = new ProcessBuilder(new File(outputDir, "tools/android").getAbsolutePath()).start();
+                    process.waitFor();
+
+                    // spawn the Sdk setup dialog
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        @Override
+                        public void run() {
+                            ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                                @Override
+                                public void run() {
+                                    AndroidSdkUtils.createNewAndroidPlatform(outputDir.getAbsolutePath(), true);
+                                }
+                            });
+                        }
+                    });
+
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            AndroidSetupDialog.this.dispose();
                         }
                     });
                 } catch (final Throwable e) {

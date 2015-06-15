@@ -60,6 +60,27 @@
                     <artifactId>robovm-ib-integrator</artifactId>
                     <version>${robovm.version}</version>
                 </dependency>
+                <!--<dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>gradle</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/plugins/gradle/lib/gradle.jar</systemPath>
+                </dependency>
+                <dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>maven</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/plugins/maven/lib/maven.jar</systemPath>
+                </dependency>-->
+                <dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>android</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/plugins/android/lib/android.jar</systemPath>
+                </dependency>
             </dependencies>
         </profile>
 
@@ -107,6 +128,13 @@
                     <version>1.0.0</version>
                     <scope>system</scope>
                     <systemPath>${idea.home}/plugins/maven/lib/maven.jar</systemPath>
+                </dependency>
+                <dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>android</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/plugins/android/lib/android.jar</systemPath>
                 </dependency>
             </dependencies>
         </profile>

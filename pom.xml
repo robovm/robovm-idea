@@ -60,6 +60,10 @@
                     <artifactId>robovm-ib-integrator</artifactId>
                     <version>${robovm.version}</version>
                 </dependency>
+                <!-- These dependencies are provided by the IntelliJ IDEA SDK instead of via
+                Maven. This means you need to explcitely add them to the SDK, see
+                http://libgdx.badlogicgames.com/uploads/Screen%20Shot%202015-06-15%20at%2014.42.12-SfPxLfJmDA.png
+                Anything starting with Contents/plugins/ in this screenshot needs to be added -->
                 <!--<dependency>
                     <groupId>org.jetbrains.plugin</groupId>
                     <artifactId>gradle</artifactId>
@@ -73,14 +77,14 @@
                     <version>1.0.0</version>
                     <scope>system</scope>
                     <systemPath>${idea.home}/plugins/maven/lib/maven.jar</systemPath>
-                </dependency>-->
+                </dependency>
                 <dependency>
                     <groupId>org.jetbrains.plugin</groupId>
                     <artifactId>android</artifactId>
                     <version>1.0.0</version>
                     <scope>system</scope>
                     <systemPath>${idea.home}/plugins/android/lib/android.jar</systemPath>
-                </dependency>
+                </dependency>-->
             </dependencies>
         </profile>
 

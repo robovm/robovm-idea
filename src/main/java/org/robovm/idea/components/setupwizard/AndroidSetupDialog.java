@@ -1,5 +1,6 @@
 package org.robovm.idea.components.setupwizard;
 
+import com.android.tools.idea.sdk.DefaultSdks;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDialog;
@@ -11,7 +12,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.jetbrains.android.sdk.AndroidSdkUtils;
-import org.robovm.idea.RoboVmPlugin;
 import org.zeroturnaround.zip.NameMapper;
 import org.zeroturnaround.zip.ZipUtil;
 
@@ -65,7 +65,7 @@ public class AndroidSetupDialog extends JDialog {
                 VirtualFile[] dir = fileChooser.choose(null, location);
                 if (dir != null && dir.length > 0) {
                     sdkLocation.setText(dir[0].getCanonicalPath());
-                    boolean validSdk = isAndroidSdkInstalled();
+                    boolean validSdk = isAndroidSdkInstalled(sdkLocation.getText());
                     installAndroidSdkButton.setVisible(!validSdk);
                 }
             }
@@ -85,18 +85,13 @@ public class AndroidSetupDialog extends JDialog {
             }
         });
 
-        if(isAndroidSdkInstalled()) {
+        if(isAndroidSdkInstalled(sdkLocation.getText()) && isAndroidSdkSetup() && areAndroidComponentsInstalled(sdkLocation.getText())) {
             nextButton.setText("Next");
             installAndroidSdkButton.setVisible(false);
         }
 
         pack();
         setLocationRelativeTo(null);
-    }
-
-    private boolean isAndroidSdkInstalled() {
-        File sdk = new File(sdkLocation.getText(), "tools/android");
-        return sdk.exists();
     }
 
     private void installAndroidSdk() {
@@ -139,130 +134,34 @@ public class AndroidSetupDialog extends JDialog {
             }
         });
 
+        final String sdkDir = sdkLocation.getText();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                File destination = null;
                 try {
-                    // download the SDK zip to a temporary location
-                    //destination = new File("/var/folders/x5/833s8nbn1953zc403mr8sj800000gn/T/android-sdk2784309449223743597.zip");
-                    destination = File.createTempFile("android-sdk", ".zip");
-                    System.out.println(destination);
-                    URL url = new URL(ANDROID_SDK_URL);
-                    URLConnection con = url.openConnection();
-                    long length = con.getContentLengthLong();
-                    byte[] buffer = new byte[1024*100];
-                    try (InputStream in = con.getInputStream(); OutputStream out = new BufferedOutputStream(new FileOutputStream(destination))) {
-                        int read = in.read(buffer);
-                        int total = read;
-                        while(read != -1) {
-                            out.write(buffer, 0, read);
-                            read = in.read(buffer);
-                            total += read;
-                            final int percentage = (int)(((double)total / (double)length) * 100);
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    progressBar.setValue(Math.min(100, percentage));
-                                }
-                            });
-
-                            if(cancel.getValue()) {
-                                SwingUtilities.invokeLater(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        installAndroidSdkButton.setText("Install Android SDK");
-                                        for(ActionListener listener: installAndroidSdkButton.getActionListeners()) {
-                                            installAndroidSdkButton.removeActionListener(listener);
-                                        }
-                                        installAndroidSdkButton.addActionListener(new ActionListener() {
-                                            @Override
-                                            public void actionPerformed(ActionEvent e) {
-                                                installAndroidSdk();
-                                            }
-                                        });
-                                        installPanel.removeAll();
-                                        installPanel.revalidate();
-                                        browseButton.setEnabled(true);
-                                        nextButton.setEnabled(true);
-                                    }
-                                });
-                                break;
-                            }
-                        }
+                    if(!isAndroidSdkInstalled(sdkDir)) {
+                        downloadAndroidSdk(sdkDir, progressBar, label, cancel);
                     }
 
-                    // unpack the SDK zip, then rename the extracted
-                    // folder
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            label.setText("Unpacking SDK to " + sdkLocation.getText());
-                            installAndroidSdkButton.setEnabled(false);
-                            nextButton.setEnabled(false);
-                        }
-                    });
-                    final File outputDir = new File(sdkLocation.getText());
-                    File tmpOutputDir = new File(outputDir.getParent());
-                    if(!tmpOutputDir.exists()) {
-                        if(!tmpOutputDir.mkdirs()) {
-                            throw new RuntimeException("Couldn't create output directory");
-                        }
+                    if (!areAndroidComponentsInstalled(sdkDir)) {
+                        installAndroidSdkComponents(sdkDir, label);
                     }
-                    ZipUtil.unpack(destination, tmpOutputDir, new NameMapper() {
-                        @Override
-                        public String map(String s) {
-                            int idx = s.indexOf("/");
-                            s = outputDir.getName() + s.substring(idx);
-                            final String file = s;
-                            SwingUtilities.invokeLater(new Runnable() {
-                                @Override
-                                public void run() {
-                                    label.setText("Unpacking " + file.substring(0, Math.min(50, file.length()-1)) + " ...");
-                                }
-                            });
-                            return s;
-                        }
-                    });
-
-                    // set all files in tools/ to be executable
-                    // ziputils doesn't preserve file permissions
-                    for(File file: new File(outputDir, "tools").listFiles()) {
-                        if(file.isFile()) {
-                            file.setExecutable(true);
-                        }
-                    }
-
-                    for(File file: new File(outputDir, "tools/proguard/bin").listFiles()) {
-                        if(file.isFile()) {
-                            file.setExecutable(true);
-                        }
-                    }
-
-                    SwingUtilities.invokeLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            label.setText("Installing SDK components");
-                        }
-                    });
-
-                    // done with unpacking, let's show the components
-                    // installer wizard
-                    Process process = new ProcessBuilder(new File(outputDir, "tools/android").getAbsolutePath()).start();
-                    process.waitFor();
 
                     // spawn the Sdk setup dialog
-                    SwingUtilities.invokeAndWait(new Runnable() {
-                        @Override
-                        public void run() {
-                            ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                                @Override
-                                public void run() {
-                                    AndroidSdkUtils.createNewAndroidPlatform(outputDir.getAbsolutePath(), true);
-                                }
-                            });
-                        }
-                    });
+                    if( !isAndroidSdkSetup()) {
+                        SwingUtilities.invokeAndWait(new Runnable() {
+                            @Override
+                            public void run() {
+                                ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        DefaultSdks.createAndroidSdksForAllTargets(new File(sdkDir));
+                                    }
+                                });
+                            }
+                        });
+                    }
 
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
@@ -279,13 +178,120 @@ public class AndroidSetupDialog extends JDialog {
                             e.printStackTrace();
                         }
                     });
-                } finally {
-                    if(destination != null) {
-                        destination.delete();
-                    }
                 }
             }
         }).start();
+    }
+
+    private void installAndroidSdkComponents(String sdkDir, final JLabel label) throws IOException, InterruptedException {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                label.setText("Installing SDK components");
+            }
+        });
+
+        // done with unpacking, let's show the components
+        // installer wizard
+        Process process = new ProcessBuilder(new File(sdkDir, "tools/android").getAbsolutePath()).start();
+        process.waitFor();
+    }
+
+    private void downloadAndroidSdk(final String sdkDir, final JProgressBar progressBar, final JLabel label, final BooleanFlag cancel) throws IOException {
+        // download the SDK zip to a temporary location
+        File destination = File.createTempFile("android-sdk", ".zip");
+        destination.deleteOnExit();
+        System.out.println(destination);
+        URL url = new URL(ANDROID_SDK_URL);
+        URLConnection con = url.openConnection();
+        long length = con.getContentLengthLong();
+        byte[] buffer = new byte[1024*100];
+        try (InputStream in = con.getInputStream(); OutputStream out = new BufferedOutputStream(new FileOutputStream(destination))) {
+            int read = in.read(buffer);
+            int total = read;
+            while(read != -1) {
+                out.write(buffer, 0, read);
+                read = in.read(buffer);
+                total += read;
+                final int percentage = (int)(((double)total / (double)length) * 100);
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setValue(Math.min(100, percentage));
+                    }
+                });
+
+                if(cancel.getValue()) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            installAndroidSdkButton.setText("Install Android SDK");
+                            for(ActionListener listener: installAndroidSdkButton.getActionListeners()) {
+                                installAndroidSdkButton.removeActionListener(listener);
+                            }
+                            installAndroidSdkButton.addActionListener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    installAndroidSdk();
+                                }
+                            });
+                            installPanel.removeAll();
+                            installPanel.revalidate();
+                            browseButton.setEnabled(true);
+                            nextButton.setEnabled(true);
+                        }
+                    });
+                    break;
+                }
+            }
+        }
+
+        // unpack the SDK zip, then rename the extracted
+        // folder
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                label.setText("Unpacking SDK to " + sdkDir);
+                installAndroidSdkButton.setEnabled(false);
+                nextButton.setEnabled(false);
+            }
+        });
+        final File outputDir = new File(sdkDir);
+        File tmpOutputDir = new File(outputDir.getParent());
+        if(!tmpOutputDir.exists()) {
+            if(!tmpOutputDir.mkdirs()) {
+                throw new RuntimeException("Couldn't create output directory");
+            }
+        }
+        ZipUtil.unpack(destination, tmpOutputDir, new NameMapper() {
+            @Override
+            public String map(String s) {
+                int idx = s.indexOf("/");
+                s = outputDir.getName() + s.substring(idx);
+                final String file = s;
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        label.setText("Unpacking " + file.substring(0, Math.min(50, file.length()-1)) + " ...");
+                    }
+                });
+                return s;
+            }
+        });
+
+        // set all files in tools/ to be executable
+        // ziputils doesn't preserve file permissions
+        for(File file: new File(outputDir, "tools").listFiles()) {
+            if(file.isFile()) {
+                file.setExecutable(true);
+            }
+        }
+
+        for(File file: new File(outputDir, "tools/proguard/bin").listFiles()) {
+            if(file.isFile()) {
+                file.setExecutable(true);
+            }
+        }
     }
 
     private static class BooleanFlag {
@@ -300,6 +306,11 @@ public class AndroidSetupDialog extends JDialog {
         }
     }
 
+    private static boolean isAndroidSdkInstalled(String sdkDir) {
+        File sdk = new File(sdkDir, "tools/android");
+        return sdk.exists();
+    }
+
     public static boolean isAndroidSdkSetup() {
         for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
             if (sdk.getSdkType().getName().equals("Android SDK")) {
@@ -307,6 +318,11 @@ public class AndroidSetupDialog extends JDialog {
             }
         }
         return false;
+    }
+
+
+    private static boolean areAndroidComponentsInstalled(String sdkDir) {
+        return new File(sdkDir, "platforms").list().length > 0;
     }
 
     private void createUIComponents() {}

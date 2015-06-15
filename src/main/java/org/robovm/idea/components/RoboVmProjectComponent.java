@@ -18,6 +18,7 @@ package org.robovm.idea.components;
 
 import com.intellij.openapi.components.ProjectComponent;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.projectRoots.SdkType;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.idea.RoboVmPlugin;
 
@@ -33,6 +34,7 @@ public class RoboVmProjectComponent implements ProjectComponent {
     }
 
     public void initComponent() {
+        SdkType.findInstance(org.jetbrains.android.sdk.AndroidSdkType.class);
     }
 
     public void disposeComponent() {

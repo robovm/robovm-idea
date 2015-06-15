@@ -66,7 +66,7 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
             if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false) && !AndroidSetupDialog.isAndroidSdkSetup()) {
                 AndroidSetupDialog setupWizard = new AndroidSetupDialog();
                 setupWizard.show();
-                // PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
+                PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
             }
         } else {
             new NoXcodeSetupDialog().show();

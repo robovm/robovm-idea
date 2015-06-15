@@ -44,11 +44,11 @@ public class XcodeSetupDialog extends JDialog {
         setModalityType(ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("RoboVM Setup");
-        infoText.setText("<html>RoboVM requires Xcode 6 or higher.<br><br>You can install Xcode via the Mac App Store. <br><br>" +
+        infoText.setText("<html>RoboVM requires Xcode 6 or higher.<br><br>" +
                 "Once installed <ol><li>Open Xcode</li><li>Agree to the TOS.</li><li>Agree to install the command line " +
                 "tools</li></ol><br>" +
                 "<strong>Note</strong>: to deploy to a device, you will need to signup for an <strong>Apple Developer Account</strong> " +
-                "and create a signing identity and provisioning profile.<br><br>One Xcode is installed, click \"Next\".<br><br>");
+                "and create a signing identity and provisioning profile.");
         linkLabel.setText("Visit the Apple iOS Developer Center");
         installXcodeButton.addActionListener(new ActionListener() {
             @Override
@@ -118,5 +118,12 @@ public class XcodeSetupDialog extends JDialog {
                 }
             }
         });
+    }
+
+    public static void main(String[] args) {
+        XcodeSetupDialog dialog = new XcodeSetupDialog();
+        dialog.pack();
+        dialog.setVisible(true);
+        System.exit(0);
     }
 }

@@ -18,6 +18,7 @@ package org.robovm.idea.components;
 
 import com.intellij.ide.util.PropertiesComponent;
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.components.StoragePathMacros;
 import com.intellij.openapi.projectRoots.Sdk;
 import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.config.OS;
@@ -44,6 +45,10 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
     }
 
     private void displaySetupWizard() {
+        // uncomment for debugging
+        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
+        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
+
         // make sure a JDK is configured
         Sdk jdk = RoboVmSdkType.findBestJdk();
         if (jdk == null) {

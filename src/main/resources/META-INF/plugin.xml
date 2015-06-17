@@ -4,6 +4,9 @@
     <version>${project.version}</version>
     <vendor email="hello@robovm.com" url="http://www.robovm.com">RoboVM</vendor>
 
+    <depends>org.jetbrains.plugins.gradle</depends>
+    <depends>org.jetbrains.android</depends>
+
     <description><![CDATA[
      <p>
      RoboVM support for IntelliJ
@@ -24,8 +27,6 @@
 
     ]]>
     </change-notes>
-
-    <idea-version since-build="131"/>
 
     <extensions defaultExtensionNs="com.intellij">
         <fileTypeFactory implementation="org.robovm.idea.interfacebuilder.StoryboardFileTypeFactory"/>
@@ -76,8 +77,5 @@
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
         </action>
     </actions>
-
-    <depends>org.jetbrains.plugins.gradle</depends>
-    <depends>org.jetbrains.android</depends>
 
 </idea-plugin>

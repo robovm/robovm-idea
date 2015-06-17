@@ -33,17 +33,20 @@ import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.projectRoots.JavaSdk;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
+import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.ui.AppUIUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.jdom.JDOMException;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.idea.maven.project.MavenProjectsManager;
 import org.jetbrains.plugins.gradle.settings.DistributionType;
@@ -110,15 +113,14 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         templater.packageName(packageName);
         templater.buildProject(new File(contentRoot.getCanonicalPath()));
         RoboVmPlugin.logInfo(rootModel.getProject(), "Project created in %s", contentRoot.getCanonicalPath());
-        applyBuildSystem(project, rootModel, contentRoot);
         contentRoot.refresh(false, true);
-
         for(ContentEntry entry: rootModel.getContentEntries()) {
             for(SourceFolder srcFolder: entry.getSourceFolders()) {
                 entry.removeSourceFolder(srcFolder);
             }
             entry.addSourceFolder(contentRoot.findFileByRelativePath("src/main/java"), false);
         }
+        applyBuildSystem(project, rootModel, contentRoot);
     }
 
     private void applyBuildSystem(final Project project, final ModifiableRootModel model, final VirtualFile contentRoot) {
@@ -126,20 +128,25 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
             try {
                 String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/build.gradle"), "UTF-8");
                 template = template.replaceAll(ROBOVM_VERSION_PLACEHOLDER, Version.getVersion());
-                File buildFile = new File(contentRoot.getCanonicalPath() + "/build.gradle");
+                final File buildFile = new File(contentRoot.getCanonicalPath() + "/build.gradle");
                 FileUtils.write(buildFile, template);
 
-                GradleProjectSettings gradleSettings = new GradleProjectSettings();
-                gradleSettings.setDistributionType(DistributionType.DEFAULT_WRAPPED);
-                gradleSettings.setExternalProjectPath(getContentEntryPath());
-                AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
-                project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
-                settings.linkProject(gradleSettings);
+                AppUIUtil.invokeLaterIfProjectAlive(project, new Runnable() {
+                    @Override
+                    public void run() {
+                        GradleProjectSettings gradleSettings = new GradleProjectSettings();
+                        gradleSettings.setDistributionType(DistributionType.WRAPPED);
+                        gradleSettings.setExternalProjectPath(getContentEntryPath());
+                        AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
+                        project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
+                        settings.linkProject(gradleSettings);
 
-                FileDocumentManager.getInstance().saveAllDocuments();
-                ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
-                builder.forceWhenUptodate(true);
-                ExternalSystemUtil.refreshProjects(builder);
+                        FileDocumentManager.getInstance().saveAllDocuments();
+                        ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
+                        builder.forceWhenUptodate(true);
+                        ExternalSystemUtil.refreshProjects(builder);
+                    }
+                });
             } catch (IOException e) {
                 // nothing to do here, can't log or throw an exception
             }

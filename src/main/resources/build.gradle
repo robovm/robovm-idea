@@ -28,3 +28,7 @@ dependencies {
     compile "org.robovm:robovm-cocoatouch:${roboVMVersion}"
     testCompile "junit:junit:4.12"
 }
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.4'
+}

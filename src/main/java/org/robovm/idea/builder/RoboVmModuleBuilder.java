@@ -16,6 +16,7 @@
  */
 package org.robovm.idea.builder;
 
+import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
@@ -24,7 +25,10 @@ import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
+import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
+import com.intellij.openapi.externalSystem.model.project.ProjectData;
+import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback;
 import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
@@ -105,6 +109,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         // folders
         final VirtualFile contentRoot = LocalFileSystem.getInstance().findFileByIoFile(new File(getContentEntryPath()));
         final Project project = rootModel.getProject();
+        project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
         Templater templater = new Templater(templateName);
         templater.appId(appId);
         templater.appName(appName);
@@ -144,6 +149,17 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                         FileDocumentManager.getInstance().saveAllDocuments();
                         ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
                         builder.forceWhenUptodate(true);
+                        builder.callback(new ExternalProjectRefreshCallback() {
+                            @Override
+                            public void onSuccess(@Nullable DataNode<ProjectData> externalProject) {
+                                CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(project);
+                                config.MAKE_PROJECT_ON_SAVE = true;
+                            }
+
+                            @Override
+                            public void onFailure(String errorMessage, @Nullable String errorDetails) {
+                            }
+                        });
                         ExternalSystemUtil.refreshProjects(builder);
                     }
                 });
@@ -162,6 +178,8 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                     @Override
                     public void run() {
                         FileDocumentManager.getInstance().saveAllDocuments();
+                        CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(project);
+                        config.MAKE_PROJECT_ON_SAVE = true;
                         MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
                     }
                 });

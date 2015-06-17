@@ -1,3 +1,4 @@
+.DS_STORE
 target
 src/main/resources/robovm-dist
 .idea/

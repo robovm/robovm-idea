@@ -66,7 +66,13 @@ public class AndroidSetupDialog extends JDialog {
                 if (dir != null && dir.length > 0) {
                     sdkLocation.setText(dir[0].getCanonicalPath());
                     boolean validSdk = isAndroidSdkInstalled(sdkLocation.getText());
-                    installAndroidSdkButton.setVisible(!validSdk);
+                    if(validSdk) {
+                        installAndroidSdkButton.setVisible(false);
+                        nextButton.setText("Next");
+                    } else {
+                        installAndroidSdkButton.setVisible(true);
+                        nextButton.setText("Skip");
+                    }
                 }
             }
         });
@@ -81,6 +87,7 @@ public class AndroidSetupDialog extends JDialog {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                installAndroidSdk();
                 dispose();
             }
         });

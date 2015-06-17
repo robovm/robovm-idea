@@ -92,8 +92,11 @@ public class AndroidSetupDialog extends JDialog {
             }
         });
 
-        if(isAndroidSdkInstalled(sdkLocation.getText()) && isAndroidSdkSetup() && areAndroidComponentsInstalled(sdkLocation.getText())) {
+        if(isAndroidSdkInstalled(sdkLocation.getText())) {
             nextButton.setText("Next");
+            installAndroidSdkButton.setVisible(false);
+        } else {
+            nextButton.setText("Skip");
             installAndroidSdkButton.setVisible(false);
         }
 

@@ -136,33 +136,17 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 final File buildFile = new File(contentRoot.getCanonicalPath() + "/build.gradle");
                 FileUtils.write(buildFile, template);
 
-                AppUIUtil.invokeLaterIfProjectAlive(project, new Runnable() {
-                    @Override
-                    public void run() {
-                        GradleProjectSettings gradleSettings = new GradleProjectSettings();
-                        gradleSettings.setDistributionType(DistributionType.WRAPPED);
-                        gradleSettings.setExternalProjectPath(getContentEntryPath());
-                        AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
-                        project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
-                        settings.linkProject(gradleSettings);
+                GradleProjectSettings gradleSettings = new GradleProjectSettings();
+                gradleSettings.setDistributionType(DistributionType.WRAPPED);
+                gradleSettings.setExternalProjectPath(getContentEntryPath());
+                AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
+                project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
+                settings.linkProject(gradleSettings);
 
-                        FileDocumentManager.getInstance().saveAllDocuments();
-                        ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
-                        builder.forceWhenUptodate(true);
-                        builder.callback(new ExternalProjectRefreshCallback() {
-                            @Override
-                            public void onSuccess(@Nullable DataNode<ProjectData> externalProject) {
-                                CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(project);
-                                config.MAKE_PROJECT_ON_SAVE = true;
-                            }
-
-                            @Override
-                            public void onFailure(String errorMessage, @Nullable String errorDetails) {
-                            }
-                        });
-                        ExternalSystemUtil.refreshProjects(builder);
-                    }
-                });
+                FileDocumentManager.getInstance().saveAllDocuments();
+                ImportSpecBuilder builder = new ImportSpecBuilder(model.getProject(), GradleConstants.SYSTEM_ID);
+                builder.forceWhenUptodate(true);
+                ExternalSystemUtil.refreshProjects(builder);
             } catch (IOException e) {
                 // nothing to do here, can't log or throw an exception
             }

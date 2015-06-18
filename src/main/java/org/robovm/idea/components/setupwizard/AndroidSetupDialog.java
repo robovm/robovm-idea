@@ -87,8 +87,11 @@ public class AndroidSetupDialog extends JDialog {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                installAndroidSdk();
-                dispose();
+                if(!nextButton.getText().equals("Skip")) {
+                    installAndroidSdk();
+                } else {
+                    dispose();
+                }
             }
         });
 
@@ -97,7 +100,7 @@ public class AndroidSetupDialog extends JDialog {
             installAndroidSdkButton.setVisible(false);
         } else {
             nextButton.setText("Skip");
-            installAndroidSdkButton.setVisible(false);
+            installAndroidSdkButton.setVisible(true);
         }
 
         pack();

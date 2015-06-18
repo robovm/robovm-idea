@@ -1,5 +1,6 @@
 package org.robovm.idea.interfacebuilder;
 
+import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.*;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -40,6 +41,13 @@ public class RoboVmFileEditorManagerListener implements FileEditorManagerListene
             }
         }
         if(module != null) {
+            AppUIUtil.invokeLaterIfProjectAlive(project, new Runnable() {
+                @Override
+                public void run() {
+                    CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(project);
+                    config.MAKE_PROJECT_ON_SAVE = true;
+                }
+            });
             AppUIUtil.invokeOnEdt(new Runnable() {
                 @Override
                 public void run() {

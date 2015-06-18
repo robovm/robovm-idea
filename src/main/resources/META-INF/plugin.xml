@@ -7,6 +7,8 @@
     <depends>org.jetbrains.plugins.gradle</depends>
     <depends>org.jetbrains.android</depends>
 
+    <idea-version since-build="141.177"/>
+
     <description><![CDATA[
      <p>
      RoboVM support for IntelliJ

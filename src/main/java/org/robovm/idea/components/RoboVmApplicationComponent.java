@@ -46,8 +46,8 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
 
     private void displaySetupWizard() {
         // uncomment for debugging
-        PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
-        PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
+        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
+        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
 
         // make sure a JDK is configured
         Sdk jdk = RoboVmSdkType.findBestJdk();
@@ -69,9 +69,9 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
 
             // optionally setup Android SDK, only on Mac OS X
             if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false) && !AndroidSetupDialog.isAndroidSdkSetup()) {
-                AndroidSetupDialog setupWizard = new AndroidSetupDialog();
-                setupWizard.show();
-                PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
+                // AndroidSetupDialog setupWizard = new AndroidSetupDialog();
+                // setupWizard.show();
+                // PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
             }
         } else {
             new NoXcodeSetupDialog().show();

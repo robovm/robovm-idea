@@ -18,6 +18,8 @@ package org.robovm.idea.components;
 
 import com.intellij.ProjectTopics;
 import com.intellij.compiler.CompilerWorkspaceConfiguration;
+import com.intellij.compiler.server.BuildManager;
+import com.intellij.compiler.server.BuildProcessParametersProvider;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
@@ -28,6 +30,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.plugins.gradle.compiler.GradleBuildProcessParametersProvider;
 import org.jetbrains.plugins.gradle.util.GradleConstants;
 import org.robovm.idea.RoboVmPlugin;
 
@@ -85,10 +88,8 @@ public class RoboVmSdkUpdateComponent implements ModuleComponent {
                                 model.commit();
                             }
 
-                            if(module.getProject().getUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT) == null) {
-                                CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(module.getProject());
-                                config.MAKE_PROJECT_ON_SAVE = true;
-                            }
+                            CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(module.getProject());
+                            config.MAKE_PROJECT_ON_SAVE = true;
                         }
                     }
                 });

@@ -162,8 +162,6 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                     @Override
                     public void run() {
                         FileDocumentManager.getInstance().saveAllDocuments();
-                        CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(project);
-                        config.MAKE_PROJECT_ON_SAVE = true;
                         MavenProjectsManager.getInstance(project).forceUpdateAllProjectsOrFindAllAvailablePomFiles();
                     }
                 });

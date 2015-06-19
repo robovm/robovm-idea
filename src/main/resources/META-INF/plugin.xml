@@ -37,6 +37,7 @@
         <programRunner implementation="org.robovm.idea.running.RoboVmRunner"/>
         <projectTemplatesFactory implementation="org.robovm.idea.builder.RoboVmTemplatesFactory"/>
         <sdkType implementation="org.robovm.idea.sdk.RoboVmSdkType"/>
+        <buildProcess.parametersProvider implementation="org.robovm.idea.components.RoboVmBuildProcessParametersProvider"/>
     </extensions>
 
     <application-components>

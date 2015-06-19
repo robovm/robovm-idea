@@ -41,13 +41,6 @@ public class RoboVmFileEditorManagerListener implements FileEditorManagerListene
             }
         }
         if(module != null) {
-            AppUIUtil.invokeLaterIfProjectAlive(project, new Runnable() {
-                @Override
-                public void run() {
-                    CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(project);
-                    config.MAKE_PROJECT_ON_SAVE = true;
-                }
-            });
             AppUIUtil.invokeOnEdt(new Runnable() {
                 @Override
                 public void run() {

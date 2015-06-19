@@ -146,6 +146,13 @@
                     <scope>system</scope>
                     <systemPath>${idea.home}/plugins/android/lib/android.jar</systemPath>
                 </dependency>
+                <dependency>
+                    <groupId>org.jetbrains.plugin</groupId>
+                    <artifactId>ant</artifactId>
+                    <version>1.0.0</version>
+                    <scope>system</scope>
+                    <systemPath>${idea.home}/lib/ant/lib/ant.jar</systemPath>
+                </dependency>
             </dependencies>
         </profile>
     </profiles>

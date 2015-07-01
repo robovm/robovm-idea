@@ -245,9 +245,7 @@ public class RoboVmCompileTask implements CompileTask {
         Set<File> classPaths = new HashSet<File>();
         Set<File> bootClassPaths = new HashSet<File>();
         for(String path: classes.getPathsList().getPathList()) {
-            if(RoboVmPlugin.isSdkLibrary(path)) {
-                bootClassPaths.add(new File(path));
-            } else {
+            if(!RoboVmPlugin.isSdkLibrary(path)) {
                 classPaths.add(new File(path));
             }
         }
@@ -274,7 +272,7 @@ public class RoboVmCompileTask implements CompileTask {
 
         // Use the RT from the SDK
         RoboVmPlugin.logInfo(context.getProject(), "Using SDK boot classpath");
-        for(File path: RoboVmPlugin.getSdkLibraries()) {
+        for(File path: RoboVmPlugin.getSdkLibrariesWithoutSources()) {
             if(RoboVmPlugin.isBootClasspathLibrary(path)) {
                 builder.addBootClasspathEntry(path);
             } else {

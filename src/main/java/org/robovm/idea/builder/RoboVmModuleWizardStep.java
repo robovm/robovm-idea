@@ -36,6 +36,13 @@ public class RoboVmModuleWizardStep extends ModuleWizardStep {
         this.builder = builder;
     }
 
+    public void disableBuildSystem() {
+        editor.buildSystemLabel.setVisible(false);
+        editor.gradleRadioButton.setVisible(false);
+        editor.mavenRadioButton.setVisible(false);
+        editor.noneRadioButton.setVisible(false);
+    }
+
     @Override
     public JComponent getComponent() {
         return editor.panel;

@@ -30,4 +30,6 @@ public class RoboVmNewModuleEditor {
     public JRadioButton gradleRadioButton;
     public JRadioButton mavenRadioButton;
     public JRadioButton noneRadioButton;
+    public JLabel buildSystemLabel;
+
 }

@@ -16,7 +16,6 @@
  */
 package org.robovm.idea.builder;
 
-import com.intellij.compiler.CompilerWorkspaceConfiguration;
 import com.intellij.ide.util.projectWizard.JavaModuleBuilder;
 import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
@@ -25,10 +24,7 @@ import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompileStatusNotification;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.externalSystem.importing.ImportSpecBuilder;
-import com.intellij.openapi.externalSystem.model.DataNode;
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
-import com.intellij.openapi.externalSystem.model.project.ProjectData;
-import com.intellij.openapi.externalSystem.service.project.ExternalProjectRefreshCallback;
 import com.intellij.openapi.externalSystem.settings.AbstractExternalSystemSettings;
 import com.intellij.openapi.externalSystem.util.ExternalSystemApiUtil;
 import com.intellij.openapi.externalSystem.util.ExternalSystemUtil;
@@ -37,20 +33,16 @@ import com.intellij.openapi.module.ModuleType;
 import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.projectRoots.JavaSdk;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.*;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
-import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.ui.AppUIUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.jdom.JDOMException;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.idea.maven.project.MavenProjectsManager;
 import org.jetbrains.plugins.gradle.settings.DistributionType;
@@ -61,7 +53,6 @@ import org.robovm.idea.RoboVmPlugin;
 import org.robovm.idea.interfacebuilder.IBIntegratorManager;
 import org.robovm.idea.sdk.RoboVmSdkType;
 import org.robovm.templater.Templater;
-import soot.Local;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,15 +71,24 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
     private String mainClassName;
     private String appName;
     private String appId;
+    protected String robovmDir;
     private BuildSystem buildSystem;
 
     public RoboVmModuleBuilder(String templateName) {
         this.templateName = templateName;
+        this.robovmDir = "";
+    }
+
+    public RoboVmModuleBuilder(String templateName, String robovmDir) {
+        this.templateName = templateName;
+        this.robovmDir = robovmDir;
     }
 
     public void setupRootModel(final ModifiableRootModel rootModel) throws ConfigurationException {
+        String moduleDir = this.getContentEntryPath() + "/" + robovmDir;
+
         // we set the compiler output path to be inside the robovm-build dir
-        File outputDir = RoboVmPlugin.getModuleClassesDir(getContentEntryPath());
+        File outputDir = RoboVmPlugin.getModuleClassesDir(moduleDir);
         setCompilerOutputPath(outputDir.getAbsolutePath());
         myJdk = RoboVmPlugin.getSdk();
         if(myJdk == null) {
@@ -123,22 +123,22 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
             for(SourceFolder srcFolder: entry.getSourceFolders()) {
                 entry.removeSourceFolder(srcFolder);
             }
-            entry.addSourceFolder(contentRoot.findFileByRelativePath("src/main/java"), false);
+            entry.addSourceFolder(contentRoot.findFileByRelativePath(robovmDir+"/src/main/java"), false);
         }
         applyBuildSystem(project, rootModel, contentRoot);
     }
 
-    private void applyBuildSystem(final Project project, final ModifiableRootModel model, final VirtualFile contentRoot) {
+    protected void applyBuildSystem(final Project project, final ModifiableRootModel model, final VirtualFile contentRoot) {
         if(buildSystem == BuildSystem.Gradle) {
             try {
                 String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/build.gradle"), "UTF-8");
                 template = template.replaceAll(ROBOVM_VERSION_PLACEHOLDER, Version.getVersion());
-                final File buildFile = new File(contentRoot.getCanonicalPath() + "/build.gradle");
+                final File buildFile = new File(contentRoot.getCanonicalPath() + "/" + robovmDir + "/build.gradle");
                 FileUtils.write(buildFile, template);
 
                 GradleProjectSettings gradleSettings = new GradleProjectSettings();
                 gradleSettings.setDistributionType(DistributionType.WRAPPED);
-                gradleSettings.setExternalProjectPath(getContentEntryPath());
+                gradleSettings.setExternalProjectPath(this.getContentEntryPath() + "/" + robovmDir);
                 AbstractExternalSystemSettings settings = ExternalSystemApiUtil.getSettings(model.getProject(), GradleConstants.SYSTEM_ID);
                 project.putUserData(ExternalSystemDataKeys.NEWLY_CREATED_PROJECT, Boolean.TRUE);
                 settings.linkProject(gradleSettings);

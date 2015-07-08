@@ -85,7 +85,13 @@ public class RoboVmPlugin {
             @Override
             public void run() {
                 if (project != null) {
-                    ToolWindowManager.getInstance(project).notifyByBalloon(ROBOVM_TOOLWINDOW_ID, MessageType.ERROR, message);
+                    // this may throw an exception, see #88. It appears to be a timing
+                    // issue
+                    try {
+                        ToolWindowManager.getInstance(project).notifyByBalloon(ROBOVM_TOOLWINDOW_ID, MessageType.ERROR, message);
+                    } catch (Throwable t) {
+                        logError(project, message, t);
+                    }
                 }
             }
         });

@@ -134,7 +134,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
     protected void applyBuildSystem(final Project project, final ModifiableRootModel model, final VirtualFile contentRoot) {
         if(buildSystem == BuildSystem.Gradle) {
             try {
-                String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/build.gradle"), "UTF-8");
+                String template = IOUtils.toString(RoboVmModuleBuilder.class.getResource("/template_build.gradle"), "UTF-8");
                 template = template.replaceAll(ROBOVM_VERSION_PLACEHOLDER, Version.getVersion());
                 final File buildFile = new File(contentRoot.getCanonicalPath() + "/" + robovmDir + "/build.gradle");
                 FileUtils.write(buildFile, template);

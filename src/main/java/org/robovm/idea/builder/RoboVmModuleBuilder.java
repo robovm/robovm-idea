@@ -91,7 +91,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         File outputDir = RoboVmPlugin.getModuleClassesDir(moduleDir);
         setCompilerOutputPath(outputDir.getAbsolutePath());
         myJdk = RoboVmPlugin.getSdk();
-        if(myJdk == null) {
+        if(myJdk == null || !robovmDir.isEmpty()) {
             myJdk = RoboVmSdkType.findBestJdk();
         }
         Sdk jdk = RoboVmSdkType.findBestJdk();
@@ -123,7 +123,10 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
             for(SourceFolder srcFolder: entry.getSourceFolders()) {
                 entry.removeSourceFolder(srcFolder);
             }
-            entry.addSourceFolder(contentRoot.findFileByRelativePath(robovmDir+"/src/main/java"), false);
+            if(robovmDir.isEmpty()) {
+                entry.addSourceFolder(contentRoot.findFileByRelativePath(robovmDir + "/src/main/java"), false);
+            }
+            new File(entry.getFile().getCanonicalPath()).delete();
         }
         applyBuildSystem(project, rootModel, contentRoot);
     }
@@ -169,16 +172,6 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 // nothing to do here, can't log or throw an exception
             }
         }
-    }
-
-    private void setupIBandCompile(final Project project) {
-        IBIntegratorManager.getInstance().projectChanged(project);
-        CompileScope scope = CompilerManager.getInstance(project).createProjectCompileScope(project);
-        CompilerManager.getInstance(project).compile(scope, new CompileStatusNotification() {
-            @Override
-            public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
-            }
-        });
     }
 
     public void setApplicationId(String applicationId) {

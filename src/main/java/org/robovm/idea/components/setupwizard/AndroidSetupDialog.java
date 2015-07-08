@@ -319,7 +319,7 @@ public class AndroidSetupDialog extends JDialog {
         }
     }
 
-    private static boolean isAndroidSdkInstalled(String sdkDir) {
+    public static boolean isAndroidSdkInstalled(String sdkDir) {
         File sdk = new File(sdkDir, "tools/android");
         return sdk.exists();
     }
@@ -333,8 +333,16 @@ public class AndroidSetupDialog extends JDialog {
         return false;
     }
 
+    public static String getAndroidSdkLocation() {
+        for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
+            if (sdk.getSdkType().getName().equals("Android SDK")) {
+                return sdk.getHomePath();
+            }
+        }
+        return null;
+    }
 
-    private static boolean areAndroidComponentsInstalled(String sdkDir) {
+    public static boolean areAndroidComponentsInstalled(String sdkDir) {
         return new File(sdkDir, "platforms").list().length > 0;
     }
 

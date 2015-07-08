@@ -60,8 +60,8 @@ public class RoboVmTemplatesFactory extends ProjectTemplatesFactory {
     @Override
     public ProjectTemplate[] createTemplates(String group, WizardContext context) {
         return new ProjectTemplate[] {
+                new RoboVmProjectTemplate("RoboVM iOS & Android Cross-Platform App", "A multi module project with support for Android and iOS, with a shared code project", new CrossPlatformModuleBuilder("cross-platform")),
                 new RoboVmProjectTemplate("RoboVM iOS Single View App", "A basic single view app using storyboards", new RoboVmModuleBuilder("single-view")),
-                new RoboVmProjectTemplate("RoboVM Cross-Platform App", "A multi module project with support for Android", new CrossPlatformModuleBuilder("cross-platform")),
                 new RoboVmProjectTemplate("RoboVM iOS App without storyboards", "A basic single view app without storyboards", new RoboVmModuleBuilder("default")),
                 new RoboVmProjectTemplate("RoboVM Console App", "A console app for Mac OS X or Linux", new RoboVmModuleBuilder("console")),
         };

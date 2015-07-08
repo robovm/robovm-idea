@@ -45,6 +45,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="Maven: com.robovm:robovm-ib-integrator:1.4.1-SNAPSHOT" level="project" />
+    <orderEntry type="module" module-name="robovm-ib-integrator" />
   </component>
 </module>

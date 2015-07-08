@@ -55,19 +55,14 @@ public class RoboVmFileEditorManagerListener implements FileEditorManagerListene
                     // this might be the first time someone opened a storyboard, do
                     // at least one compilation if the target folder doesn't exist!
                     final VirtualFile outputPath = CompilerPaths.getModuleOutputDirectory(foundModule, false);
-                    if(outputPath == null || !outputPath.exists()) {
-                        CompileScope scope = CompilerManager.getInstance(project).createModuleCompileScope(foundModule, true);
-                        CompilerManager.getInstance(project).compile(scope, new CompileStatusNotification() {
-                            @Override
-                            public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
-                                IBIntegratorManager.getInstance().moduleChanged(foundModule);
-                                openXCodeProject(foundModule, file);
-                            }
-                        });
-                    } else {
-                        IBIntegratorManager.getInstance().moduleChanged(foundModule);
-                        openXCodeProject(foundModule, file);
-                    }
+                    CompileScope scope = CompilerManager.getInstance(project).createModuleCompileScope(foundModule, true);
+                    CompilerManager.getInstance(project).compile(scope, new CompileStatusNotification() {
+                        @Override
+                        public void finished(boolean aborted, int errors, int warnings, CompileContext compileContext) {
+                            IBIntegratorManager.getInstance().moduleChanged(foundModule);
+                            openXCodeProject(foundModule, file);
+                        }
+                    });
                 }
             });
         }

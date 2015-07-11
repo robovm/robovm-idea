@@ -39,6 +39,8 @@ import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.plugin.PluginArgument;
+import org.robovm.compiler.target.ConsoleTarget;
+import org.robovm.compiler.target.ios.IOSTarget;
 import org.robovm.compiler.target.ios.ProvisioningProfile;
 import org.robovm.compiler.target.ios.SigningIdentity;
 import org.robovm.idea.RoboVmPlugin;
@@ -318,7 +320,7 @@ public class RoboVmCompileTask implements CompileTask {
     private void configureTarget(Config.Builder builder, RoboVmRunConfiguration runConfig) {
         if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Device) {
             // configure device build
-            builder.targetType(Config.TargetType.ios);
+            builder.targetType(IOSTarget.TYPE);
             String signingId = runConfig.getSigningIdentity();
             String profile = runConfig.getProvisioningProfile();
             if (RoboVmIOSRunConfigurationSettingsEditor.SKIP_SIGNING.equals(signingId)) {
@@ -332,9 +334,9 @@ public class RoboVmCompileTask implements CompileTask {
                 }
             }
         } else if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Simulator) {
-            builder.targetType(Config.TargetType.ios);
+            builder.targetType(IOSTarget.TYPE);
         } else if(runConfig.getTargetType() == RoboVmRunConfiguration.TargetType.Console) {
-            builder.targetType(Config.TargetType.console);
+            builder.targetType(ConsoleTarget.TYPE);
         } else {
             throw new RuntimeException("Unsupported target type: " + runConfig.getTargetType());
         }

@@ -12,7 +12,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ModuleRootManager;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.AppUIUtil;
-import com.robovm.ibintegrator.IBIntegrator;
 import org.robovm.idea.RoboVmPlugin;
 
 import java.io.File;

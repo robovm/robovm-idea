@@ -56,7 +56,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
 
     @Override
     protected void applyEditorTo(RoboVmRunConfiguration config) throws ConfigurationException {
-        config.setModuleName(module.getSelectedItem().toString());
+        config.setModuleName(module.getSelectedItem() != null? module.getSelectedItem().toString(): "");
         config.setTargetType(attachedDeviceRadioButton.isSelected()? RoboVmRunConfiguration.TargetType.Device: RoboVmRunConfiguration.TargetType.Simulator);
         config.setDeviceArch((Arch) deviceArch.getSelectedItem());
         config.setSigningIdentity(signingIdentity.getSelectedItem().toString());
@@ -86,6 +86,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
             this.module.addItem(module.getName());
             if(module.getName().equals(config.getModuleName())) {
                 this.module.setSelectedIndex(this.module.getItemCount() - 1);
+                config.setModule(module);
             }
         }
 

@@ -24,6 +24,7 @@ import com.intellij.execution.configurations.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunConfigurationWithSuppressedDefaultRunAction;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.JDOMExternalizerUtil;
@@ -36,6 +37,7 @@ import org.robovm.compiler.config.Arch;
 import org.robovm.compiler.config.Config;
 import org.robovm.idea.RoboVmPlugin;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -102,6 +104,7 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     public void readExternal(Element element) throws InvalidDataException {
         super.readExternal(element);
 
+        readModule(element);
         moduleName = JDOMExternalizerUtil.readField(element, "moduleName");
         String targetTypeStr = JDOMExternalizerUtil.readField(element, "targetType");
         targetType = targetTypeStr.length() == 0? null: TargetType.valueOf(targetTypeStr);
@@ -122,6 +125,8 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
     public void writeExternal(Element element) throws WriteExternalException {
         super.writeExternal(element);
 
+        setModuleName(moduleName);
+        writeModule(element);
         JDOMExternalizerUtil.writeField(element, "moduleName", moduleName);
         JDOMExternalizerUtil.writeField(element, "targetType", targetType == null? null: targetType.toString());
         JDOMExternalizerUtil.writeField(element, "deviceArch", deviceArch == null? null: deviceArch.toString());
@@ -175,6 +180,12 @@ public class RoboVmRunConfiguration extends ModuleBasedConfiguration<RoboVmRunCo
 
     public void setModuleName(String moduleName) {
         this.moduleName = moduleName;
+        for (Module module : ModuleManager.getInstance(getConfigurationModule().getProject()).getModules()) {
+            if(module.getName().equals(moduleName)) {
+                setModule(module);
+                break;
+            }
+        }
     }
 
     public String getModuleName() {

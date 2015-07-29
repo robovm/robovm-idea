@@ -19,6 +19,8 @@ package org.robovm.idea;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerManager;
 import com.intellij.openapi.compiler.CompilerPaths;
@@ -30,9 +32,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ModuleRootManager;
+import com.intellij.openapi.roots.OrderEntry;
 import com.intellij.openapi.roots.OrderEnumerator;
+import com.intellij.openapi.roots.OrderRootType;
 import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.vfs.*;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -41,6 +45,7 @@ import com.intellij.util.ui.UIUtil;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
 import org.robovm.compiler.Version;
 import org.robovm.compiler.clazz.Path;
 import org.robovm.compiler.config.Arch;
@@ -68,6 +73,7 @@ public class RoboVmPlugin {
     private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
     static volatile Map<Project, ConsoleView> consoleViews = new ConcurrentHashMap<>();
     static volatile Map<Project, ToolWindow> toolWindows = new ConcurrentHashMap<>();
+    static volatile Map<Project, VirtualFileListener> fileListeners = new ConcurrentHashMap<>();
     static final List<UnprintedMessage> unprintedMessages = new ArrayList<UnprintedMessage>();
 
     static class UnprintedMessage {
@@ -126,7 +132,7 @@ public class RoboVmPlugin {
         UIUtil.invokeLaterIfNeeded(new Runnable() {
             @Override
             public void run() {
-                ConsoleView consoleView = project == null? null: consoleViews.get(project);
+                ConsoleView consoleView = project == null ? null : consoleViews.get(project);
                 if (consoleView != null) {
                     for (UnprintedMessage unprinted : unprintedMessages) {
                         consoleView.print(unprinted.string, unprinted.type);
@@ -204,6 +210,46 @@ public class RoboVmPlugin {
                 logInfo(project, "RoboVM plugin initialized");
             }
         });
+
+        // initialize virtual file change listener so we can
+        // trigger recompiles on file saves
+        VirtualFileListener listener = new VirtualFileAdapter() {
+            @Override
+            public void contentsChanged(@NotNull VirtualFileEvent event) {
+                compileIfChanged(event, project);
+            }
+        };
+        VirtualFileManager.getInstance().addVirtualFileListener(listener);
+        fileListeners.put(project, listener);
+    }
+
+    private static void compileIfChanged(VirtualFileEvent event, final Project project) {
+        VirtualFile file = event.getFile();
+        Module module = null;
+        for(Module m: ModuleManager.getInstance(project).getModules()) {
+            if(ModuleRootManager.getInstance(m).getFileIndex().isInContent(file)) {
+                module = m;
+                break;
+            }
+        }
+
+        if(module != null) {
+            if(isRoboVmModule(module)) {
+                final Module foundModule = module;
+                OrderEntry orderEntry = ModuleRootManager.getInstance(module).getFileIndex().getOrderEntryForFile(file);
+                if(orderEntry != null && orderEntry.getFiles(OrderRootType.SOURCES).length != 0) {
+                    ApplicationManager.getApplication().invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(!CompilerManager.getInstance(project).isCompilationActive()) {
+                                CompileScope scope = CompilerManager.getInstance(project).createModuleCompileScope(foundModule, true);
+                                CompilerManager.getInstance(project).compile(scope, null);
+                            }
+                        }
+                    });
+                }
+            }
+        }
     }
 
     public static void unregisterProject(Project project) {
@@ -213,6 +259,7 @@ public class RoboVmPlugin {
         }
         toolWindows.remove(project);
         ToolWindowManager.getInstance(project).unregisterToolWindow(ROBOVM_TOOLWINDOW_ID);
+        VirtualFileManager.getInstance().removeVirtualFileListener(fileListeners.remove(project));
     }
 
     public static void extractSdk() {

@@ -87,9 +87,6 @@ public class RoboVmSdkUpdateComponent implements ModuleComponent {
                                 model.setSdk(sdk);
                                 model.commit();
                             }
-
-                            CompilerWorkspaceConfiguration config = CompilerWorkspaceConfiguration.getInstance(module.getProject());
-                            config.MAKE_PROJECT_ON_SAVE = true;
                         }
                     }
                 });

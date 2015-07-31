@@ -212,7 +212,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 if (!robovmDir.isEmpty()) {
                     final File localProps = new File(project.getBasePath() + "/local.properties");
                     try (FileWriter writer = new FileWriter(localProps)) {
-                        writer.write("sdk.dir=" + AndroidSetupDialog.getAndroidSdkLocation());
+                        writer.write("sdk.dir=" + AndroidSetupDialog.getAndroidSdkLocation().replace('\\', '/'));
                     }
                 }
             } else if (buildSystem == BuildSystem.Maven) {

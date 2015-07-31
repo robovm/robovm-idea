@@ -46,6 +46,7 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
 
     public static final String ROBOVM_HAS_SHOWN_LICENSE_WIZARD = "robovm.hasShownLicenseWizard";
     public static final String ROBOVM_HAS_SHOWN_ANDROID_WIZARD = "robovm.hasShownAndroidWizard";
+    public static final String ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD = "robovm.hasShownNoXcodeWizard";
 
     @Override
     public void initComponent() {
@@ -69,21 +70,24 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
         // inform the user that they
         // won't be able to compile for
         // iOS
-        if (OS.getDefaultOS() == OS.macosx) {
+        if (System.getProperty("os.name").contains("Mac")) {
             try {
                 ToolchainUtil.findXcodePath();
             } catch (Throwable e) {
                 new XcodeSetupDialog().show();
             }
-
-            // optionally setup Android SDK, only on Mac OS X
-            if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false) && !AndroidSetupDialog.isAndroidSdkSetup()) {
-                AndroidSetupDialog setupWizard = new AndroidSetupDialog();
-                setupWizard.show();
-                PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
-            }
         } else {
-            new NoXcodeSetupDialog().show();
+            if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, false)) {
+                new NoXcodeSetupDialog().show();
+                PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_NO_XCODE_WIZARD, "true");
+            }
+        }
+
+        // optionally setup Android SDK
+        if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false) && !AndroidSetupDialog.isAndroidSdkSetup()) {
+            AndroidSetupDialog setupWizard = new AndroidSetupDialog();
+            setupWizard.show();
+            // PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
         }
 
         // Ask user to sign up or enter a license key

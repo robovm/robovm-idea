@@ -11,7 +11,11 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.IOUtils;
 import org.jetbrains.android.sdk.AndroidSdkUtils;
+import org.robovm.compiler.Version;
 import org.zeroturnaround.zip.NameMapper;
 import org.zeroturnaround.zip.ZipUtil;
 
@@ -21,11 +25,37 @@ import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.zip.GZIPInputStream;
 
 import javax.swing.*;
 
 public class AndroidSetupDialog extends JDialog {
-    private static final String ANDROID_SDK_URL = "http://dl.google.com/android/android-sdk_r24.2-macosx.zip";
+    enum OS {
+        MacOsX,
+        Windows,
+        Linux
+    }
+
+    private static final String ANDROID_SDK_URL_MACOSX = "http://dl.google.com/android/android-sdk_r24.3.3-macosx.zip";
+    private static final String ANDROID_SDK_URL_WINDOWS = "http://dl.google.com/android/android-sdk_r24.3.3-windows.zip";
+    private static final String ANDROID_SDK_URL_LINUX = "http://dl.google.com/android/android-sdk_r24.3.3-linux.tgz";
+
+    private static OS os;
+    private static String ANDROID_SDK_URL;
+
+    static {
+        if(System.getProperty("os.name").contains("Mac")) {
+            ANDROID_SDK_URL = ANDROID_SDK_URL_MACOSX;
+            os = OS.MacOsX;
+        } else if(System.getProperty("os.name").contains("Windows")) {
+            ANDROID_SDK_URL = ANDROID_SDK_URL_WINDOWS;
+            os = OS.Windows;
+        } else if(System.getProperty("os.name").contains("Linux")) {
+            ANDROID_SDK_URL = ANDROID_SDK_URL_LINUX;
+            os = OS.Linux;
+        }
+    }
+
     private JPanel panel;
     private JLabel infoText;
     private JButton nextButton;
@@ -206,7 +236,7 @@ public class AndroidSetupDialog extends JDialog {
 
         // done with unpacking, let's show the components
         // installer wizard
-        Process process = new ProcessBuilder(new File(sdkDir, "tools/android").getAbsolutePath()).start();
+        Process process = new ProcessBuilder(new File(sdkDir, os == OS.Windows? "tools/android.bat": "tools/android").getAbsolutePath()).start();
         process.waitFor();
     }
 
@@ -276,23 +306,57 @@ public class AndroidSetupDialog extends JDialog {
                 throw new RuntimeException("Couldn't create output directory");
             }
         }
-        ZipUtil.unpack(destination, tmpOutputDir, new NameMapper() {
-            @Override
-            public String map(String s) {
-                int idx = s.indexOf("/");
-                s = outputDir.getName() + s.substring(idx);
-                final String file = s;
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        label.setText("Unpacking " + file.substring(0, Math.min(50, file.length()-1)) + " ...");
-                    }
-                });
-                return s;
-            }
-        });
 
-        // set all files in tools/ to be executable
+        if(ANDROID_SDK_URL.endsWith("zip")) {
+            ZipUtil.unpack(destination, tmpOutputDir, new NameMapper() {
+                @Override
+                public String map(String s) {
+                    int idx = s.indexOf("/");
+                    s = outputDir.getName() + s.substring(idx);
+                    final String file = s;
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            label.setText("Unpacking " + file.substring(0, Math.min(50, file.length() - 1)) + " ...");
+                        }
+                    });
+                    return s;
+                }
+            });
+        } else {
+            TarArchiveInputStream in = null;
+            try {
+                in = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(destination)));
+                ArchiveEntry entry = null;
+                while ((entry = in.getNextEntry()) != null) {
+                    File f = new File(tmpOutputDir, entry.getName());
+                    if (entry.isDirectory()) {
+                        f.mkdirs();
+                    } else {
+                        f.getParentFile().mkdirs();
+                        OutputStream out = null;
+                        try {
+                            out = new FileOutputStream(f);
+                            IOUtils.copy(in, out);
+                        } finally {
+                            IOUtils.closeQuietly(out);
+                        }
+                    }
+
+                    final String fileName = entry.getName();
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            label.setText("Unpacking " + fileName.substring(0, Math.min(50, fileName.length() - 1)) + " ...");
+                        }
+                    });
+                }
+            } catch (Throwable t) {
+                // can't do anything here
+            } finally {
+                IOUtils.closeQuietly(in);
+            }
+        }
         // ziputils doesn't preserve file permissions
         for(File file: new File(outputDir, "tools").listFiles()) {
             if(file.isFile()) {
@@ -320,7 +384,7 @@ public class AndroidSetupDialog extends JDialog {
     }
 
     public static boolean isAndroidSdkInstalled(String sdkDir) {
-        File sdk = new File(sdkDir, "tools/android");
+        File sdk = new File(sdkDir, os == OS.Windows? "tools/android.bat": "tools/android");
         return sdk.exists();
     }
 

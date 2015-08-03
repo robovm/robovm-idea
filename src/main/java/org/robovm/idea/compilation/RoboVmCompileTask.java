@@ -95,7 +95,7 @@ public class RoboVmCompileTask implements CompileTask {
             // load the robovm.xml file
             loadConfig(context.getProject(), builder, moduleBaseDir, false);
             builder.os(OS.ios);
-            builder.arch(Arch.thumbv7);
+            builder.archs(ipaConfig.getArchs());
             builder.installDir(ipaConfig.getDestinationDir());
             builder.iosSignIdentity(SigningIdentity.find(SigningIdentity.list(), ipaConfig.getSigningIdentity()));
             if (ipaConfig.getProvisioningProfile() != null) {
@@ -110,7 +110,8 @@ public class RoboVmCompileTask implements CompileTask {
             AppCompiler compiler = new AppCompiler(config);
             RoboVmCompilerThread thread = new RoboVmCompilerThread(compiler, progress) {
                 protected void doCompile() throws Exception {
-                    compiler.createIpa(ipaConfig.getArchs());
+                    compiler.build();
+                    compiler.archive();
                 }
             };
             thread.compile();

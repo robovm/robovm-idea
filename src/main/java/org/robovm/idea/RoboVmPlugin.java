@@ -42,6 +42,7 @@ import com.intellij.openapi.wm.ToolWindowAnchor;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.util.ui.UIUtil;
+
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
@@ -53,7 +54,7 @@ import org.robovm.compiler.config.Config;
 import org.robovm.compiler.config.OS;
 import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.target.ios.InfoPList;
+import org.robovm.compiler.util.InfoPList;
 import org.robovm.idea.compilation.RoboVmCompileTask;
 import org.robovm.idea.interfacebuilder.RoboVmFileEditorManagerListener;
 import org.robovm.idea.sdk.RoboVmSdkType;

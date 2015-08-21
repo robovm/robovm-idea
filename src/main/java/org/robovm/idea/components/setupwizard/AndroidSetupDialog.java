@@ -36,9 +36,9 @@ public class AndroidSetupDialog extends JDialog {
         Linux
     }
 
-    private static final String ANDROID_SDK_URL_MACOSX = "http://dl.google.com/android/android-sdk_r24.3.3-macosx.zip";
-    private static final String ANDROID_SDK_URL_WINDOWS = "http://dl.google.com/android/android-sdk_r24.3.3-windows.zip";
-    private static final String ANDROID_SDK_URL_LINUX = "http://dl.google.com/android/android-sdk_r24.3.3-linux.tgz";
+    private static final String ANDROID_SDK_URL_MACOSX = "http://dl.google.com/android/android-sdk_r24.3.4-macosx.zip";
+    private static final String ANDROID_SDK_URL_WINDOWS = "http://dl.google.com/android/android-sdk_r24.3.4-windows.zip";
+    private static final String ANDROID_SDK_URL_LINUX = "http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz";
 
     private static OS os;
     private static String ANDROID_SDK_URL;
@@ -284,7 +284,7 @@ public class AndroidSetupDialog extends JDialog {
                             nextButton.setEnabled(true);
                         }
                     });
-                    break;
+                    return;
                 }
             }
         }

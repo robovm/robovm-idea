@@ -56,6 +56,7 @@ import org.robovm.compiler.config.Resource;
 import org.robovm.compiler.log.Logger;
 import org.robovm.compiler.util.InfoPList;
 import org.robovm.idea.compilation.RoboVmCompileTask;
+import org.robovm.idea.config.RoboVmGlobalConfig;
 import org.robovm.idea.interfacebuilder.RoboVmFileEditorManagerListener;
 import org.robovm.idea.sdk.RoboVmSdkType;
 
@@ -225,6 +226,9 @@ public class RoboVmPlugin {
     }
 
     private static void compileIfChanged(VirtualFileEvent event, final Project project) {
+        if(!RoboVmGlobalConfig.isCompileOnSave()) {
+            return;
+        }
         VirtualFile file = event.getFile();
         Module module = null;
         for(Module m: ModuleManager.getInstance(project).getModules()) {

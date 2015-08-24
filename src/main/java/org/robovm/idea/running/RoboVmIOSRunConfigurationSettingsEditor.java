@@ -16,6 +16,9 @@
  */
 package org.robovm.idea.running;
 
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -34,9 +37,13 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 
 public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<RoboVmRunConfiguration> {
+    private static final Arch[] DEVICE_ARCHS = { Arch.thumbv7, Arch.arm64 };
+    private static final Arch[] SIMULATOR_ARCHS = { Arch.x86, Arch.x86_64 };
+
     public static final String SKIP_SIGNING = "Don't sign";
     public static final String AUTO_SIGNING_IDENTITY = "Auto (matches 'iPhone Developer|iOS Development')";
     public static final String AUTO_PROVISIONING_PROFILE = "Auto";
+
     private JPanel panel;
     private JTabbedPane tabbedPane1;
     private JComboBox module;
@@ -56,13 +63,14 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
 
     @Override
     protected void applyEditorTo(RoboVmRunConfiguration config) throws ConfigurationException {
-        config.setModuleName(module.getSelectedItem() != null? module.getSelectedItem().toString(): "");
-        config.setTargetType(attachedDeviceRadioButton.isSelected()? RoboVmRunConfiguration.TargetType.Device: RoboVmRunConfiguration.TargetType.Simulator);
+        config.setModuleName(module.getSelectedItem() != null ? module.getSelectedItem().toString() : "");
+        config.setTargetType(attachedDeviceRadioButton.isSelected() ? RoboVmRunConfiguration.TargetType.Device
+                : RoboVmRunConfiguration.TargetType.Simulator);
         config.setDeviceArch((Arch) deviceArch.getSelectedItem());
         config.setSigningIdentity(signingIdentity.getSelectedItem().toString());
         config.setProvisioningProfile(provisioningProfile.getSelectedItem().toString());
         config.setSimArch((Arch) simArch.getSelectedItem());
-        config.setSimulatorName(((SimTypeWrapper)simType.getSelectedItem()).getType().getDeviceName());
+        config.setSimulatorName(((SimTypeWrapper) simType.getSelectedItem()).getType().getDeviceName());
         config.setArguments(args.getText());
     }
 
@@ -73,6 +81,16 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
     }
 
     private void populateControls(RoboVmRunConfiguration config) {
+
+        updateModuleConfig(config);
+        updateDeviceConfig(config);
+        updateSimulatorConfig(config);
+
+        attachedDeviceRadioButton.setSelected(config.getTargetType() == RoboVmRunConfiguration.TargetType.Device);
+        args.setText(config.getArguments());
+    }
+
+    private void updateModuleConfig(RoboVmRunConfiguration config) {
         // populate with RoboVM Sdk modules
         this.module.removeAllItems();
         List<Module> roboVmModules = RoboVmPlugin.getRoboVmModules(config.getProject());
@@ -82,80 +100,100 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
                 return o1.getName().compareTo(o2.getName());
             }
         });
-        for(Module module: roboVmModules) {
+        for (Module module : roboVmModules) {
             this.module.addItem(module.getName());
-            if(module.getName().equals(config.getModuleName())) {
+            if (module.getName().equals(config.getModuleName())) {
                 this.module.setSelectedIndex(this.module.getItemCount() - 1);
                 config.setModule(module);
             }
         }
+    }
 
-        attachedDeviceRadioButton.setSelected(config.getTargetType() == RoboVmRunConfiguration.TargetType.Device);
-
-        // populate archs
-        simArch.removeAllItems();
-        deviceArch.removeAllItems();
-        for(Arch arch: Arch.values()) {
-            if(arch.isArm()) {
-                deviceArch.addItem(arch);
-                if(arch == config.getDeviceArch()) {
-                    deviceArch.setSelectedIndex(deviceArch.getItemCount() - 1);
-                }
-            } else {
-                simArch.addItem(arch);
-                if(arch == config.getSimArch()) {
-                    simArch.setSelectedIndex(simArch.getItemCount() - 1);
-                }
-            }
-        }
-
-        // populate simulators
+    private void updateSimulatorConfig(RoboVmRunConfiguration config) {
         simType.removeAllItems();
-        for(DeviceType type: DeviceType.listDeviceTypes()) {
+        simArch.removeAllItems();
+
+        // set simulator types
+        for (DeviceType type : DeviceType.listDeviceTypes()) {
             simType.addItem(new SimTypeWrapper(type));
-            if(type.getDeviceName().equals(config.getSimulatorName())) {
+            if (type.getDeviceName().equals(config.getSimulatorName())) {
+                simType.setSelectedIndex(simType.getItemCount() - 1);
+            } else if (config.getSimulatorName().isEmpty() && type.getDeviceName().contains("iPhone-6")) {
                 simType.setSelectedIndex(simType.getItemCount() - 1);
             }
         }
 
-        // set default simulator type and arch
-        if(config.getSimArch() == null) {
-            for (int i = 0; i < simArch.getItemCount(); i++) {
-                if (simArch.getItemAt(i).toString().equals("x86_64")) {
-                    simArch.setSelectedIndex(i);
-                    break;
-                }
-            }
-            for(int i = 0; i < simType.getItemCount(); i++) {
-                if(simType.getItemAt(i).toString().startsWith("iPhone-6 ")) {
-                    simType.setSelectedIndex(i);
-                    break;
+        // set default arch for selected simulator
+        SimTypeWrapper wrapper = (SimTypeWrapper) simType.getSelectedItem();
+        for (Arch arch : SIMULATOR_ARCHS) {
+            for (Arch otherArch : wrapper.getType().getArchs()) {
+                if (arch == otherArch) {
+                    simArch.addItem(otherArch);
+                    if (otherArch == config.getSimArch()) {
+                        simArch.setSelectedItem(otherArch);
+                    } else if (config.getSimArch() == null && otherArch == Arch.x86_64) {
+                        simArch.setSelectedItem(otherArch);
+                    }
                 }
             }
         }
 
-        // populate signing identities
+        // set a listener that populates the arch of a selected
+        // sim properly.
+        simType.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                updateSimArchs((SimTypeWrapper) e.getItem());
+            }
+        });
+    }
+
+    private void updateSimArchs(SimTypeWrapper wrapper) {
+        simArch.removeAllItems();
+        for (Arch arch : SIMULATOR_ARCHS) {
+            for (Arch otherArch : wrapper.getType().getArchs()) {
+                if (arch == otherArch) {
+                    simArch.addItem(otherArch);
+                    if (otherArch == Arch.x86_64) {
+                        simArch.setSelectedItem(otherArch);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    private void updateDeviceConfig(RoboVmRunConfiguration config) {
+        deviceArch.removeAllItems();
         signingIdentity.removeAllItems();
+        provisioningProfile.removeAllItems();
+
+        // populate signing identities
         signingIdentity.addItem(AUTO_SIGNING_IDENTITY);
         signingIdentity.addItem(SKIP_SIGNING);
-        for(SigningIdentity identity: SigningIdentity.list()) {
+        for (SigningIdentity identity : SigningIdentity.list()) {
             signingIdentity.addItem(identity.getName());
-            if(identity.getName().equals(config.getSigningIdentity())) {
+            if (identity.getName().equals(config.getSigningIdentity())) {
                 signingIdentity.setSelectedIndex(signingIdentity.getItemCount() - 1);
             }
         }
 
         // populate provisioning profiles
-        provisioningProfile.removeAllItems();
         provisioningProfile.addItem(AUTO_PROVISIONING_PROFILE);
-        for(ProvisioningProfile profile: ProvisioningProfile.list()) {
+        for (ProvisioningProfile profile : ProvisioningProfile.list()) {
             provisioningProfile.addItem(profile.getName());
-            if(profile.getName().equals(config.getProvisioningProfile())) {
+            if (profile.getName().equals(config.getProvisioningProfile())) {
                 provisioningProfile.setSelectedIndex(provisioningProfile.getItemCount() - 1);
             }
         }
 
-        this.args.setText(config.getArguments());
+        // populate device archs
+        for (Arch arch : DEVICE_ARCHS) {
+            deviceArch.addItem(arch);
+            if (arch == config.getDeviceArch()) {
+                deviceArch.setSelectedItem(arch);
+            }
+        }
     }
 
     private class SimTypeWrapper {

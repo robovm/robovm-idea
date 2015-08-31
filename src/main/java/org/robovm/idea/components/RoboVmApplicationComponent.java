@@ -56,8 +56,8 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
 
     private void displaySetupWizard() {
         // uncomment for debugging
-        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
-        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
+        PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
+        PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
 
         // make sure a JDK is configured
         Sdk jdk = RoboVmSdkType.findBestJdk();

@@ -1,12 +1,15 @@
 package org.robovm.idea.components.setupwizard;
 
-import com.android.tools.idea.sdk.DefaultSdks;
+import com.android.tools.idea.sdk.IdeSdks;
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDialog;
 import com.intellij.openapi.fileChooser.FileChooserFactory;
 import com.intellij.openapi.projectRoots.ProjectJdkTable;
 import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.util.BuildNumber;
+import com.intellij.openapi.util.Version;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -14,8 +17,6 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
-import org.jetbrains.android.sdk.AndroidSdkUtils;
-import org.robovm.compiler.Version;
 import org.zeroturnaround.zip.NameMapper;
 import org.zeroturnaround.zip.ZipUtil;
 
@@ -23,6 +24,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.GZIPInputStream;
@@ -117,10 +119,10 @@ public class AndroidSetupDialog extends JDialog {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(!nextButton.getText().equals("Skip")) {
-                    installAndroidSdk();
-                } else {
+                if(nextButton.getText().equals("Skip")) {
                     dispose();
+                } else {
+                    installAndroidSdk();
                 }
             }
         });
@@ -199,7 +201,26 @@ public class AndroidSetupDialog extends JDialog {
                                 ApplicationManager.getApplication().runWriteAction(new Runnable() {
                                     @Override
                                     public void run() {
-                                        DefaultSdks.createAndroidSdksForAllTargets(new File(sdkDir));
+                                        String clazz = "com.android.tools.idea.sdk.DefaultSdks";
+                                        String method = "createAndroidSdksForAllTargets";
+
+                                        try {
+                                            Class cls = AndroidSetupDialog.class.getClassLoader().loadClass(clazz);
+                                            Method mtd = cls.getMethod(method, File.class);
+                                            mtd.invoke(null, new File(sdkDir));
+                                        } catch(Throwable t) {
+                                            clazz = "com.android.tools.idea.sdk.IdeSdks";
+                                            method = "createAndroidSdkPerAndroidTarget";
+
+                                            try {
+                                                Class cls = AndroidSetupDialog.class.getClassLoader().loadClass(clazz);
+                                                Method mtd = cls.getMethod(method, File.class);
+                                                mtd.invoke(null, new File(sdkDir));
+                                            } catch(Throwable t2) {
+                                                t2.printStackTrace();
+                                                System.out.println("Couldn't create Android SDK");
+                                            }
+                                        }
                                     }
                                 });
                             }

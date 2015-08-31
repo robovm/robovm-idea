@@ -1,6 +1,5 @@
 package org.robovm.idea.components.setupwizard;
 
-import com.android.tools.idea.sdk.IdeSdks;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;

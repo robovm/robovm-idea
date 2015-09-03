@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
 
     <properties>
-        <robovm.version>${project.version}</robovm.version>
+        <robovm.version>1.7.0</robovm.version>
         <ij.plugin>true</ij.plugin>
         <idea.home>/Applications/IntelliJ IDEA 14 CE.app/Contents/</idea.home>
     </properties>

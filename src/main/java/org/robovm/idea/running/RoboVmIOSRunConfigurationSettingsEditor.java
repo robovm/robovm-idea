@@ -118,7 +118,7 @@ public class RoboVmIOSRunConfigurationSettingsEditor extends SettingsEditor<Robo
             simType.addItem(new SimTypeWrapper(type));
             if (type.getDeviceName().equals(config.getSimulatorName())) {
                 simType.setSelectedIndex(simType.getItemCount() - 1);
-            } else if (config.getSimulatorName().isEmpty() && type.getDeviceName().contains("iPhone-6")) {
+            } else if (config.getSimulatorName().isEmpty() && type.getDeviceName().contains("iPhone-6") && !type.getDeviceName().contains("Plus")) {
                 simType.setSelectedIndex(simType.getItemCount() - 1);
             }
         }

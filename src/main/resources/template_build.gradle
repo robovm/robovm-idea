@@ -10,6 +10,8 @@ buildscript {
 
 apply plugin: 'java'
 apply plugin: 'robovm'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenCentral()

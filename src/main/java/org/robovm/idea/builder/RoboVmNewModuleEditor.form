@@ -72,7 +72,7 @@
           </grid>
         </constraints>
         <properties>
-          <text value="My iOS App"/>
+          <text value="My App"/>
         </properties>
       </component>
       <component id="38f5a" class="javax.swing.JTextField" binding="appId">

@@ -53,25 +53,20 @@ public class IBIntegratorManager {
         return instance;
     }
 
-    public void projectChanged(Project project) {
-        for(Module module: ModuleManager.getInstance(project).getModules()) {
-            moduleChanged(module);
-        }
-    }
-
     public void moduleChanged(Module module) {
         if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
             return;
         }
 
-        IBIntegratorProxy proxy = daemons.get(module.getName());
+        String moduleId = getModuleId(module);
+        IBIntegratorProxy proxy = daemons.get(moduleId);
         if(proxy == null) {
             try {
                 File buildDir = RoboVmPlugin.getModuleXcodeDir(module);
-                RoboVmPlugin.logInfo(module.getProject(), "Starting Interface Builder integrator daemon for module %s", module.getName());
-                proxy = new IBIntegratorProxy(RoboVmPlugin.getRoboVmHome(), RoboVmPlugin.getLogger(module.getProject()), module.getName(), buildDir);
+                RoboVmPlugin.logInfo(module.getProject(), "Starting Interface Builder integrator daemon for module %s", moduleId);
+                proxy = new IBIntegratorProxy(RoboVmPlugin.getRoboVmHome(), RoboVmPlugin.getLogger(module.getProject()), moduleId, buildDir);
                 proxy.start();
-                daemons.put(module.getName(), proxy);
+                daemons.put(moduleId, proxy);
             } catch (Throwable e) {
                 RoboVmPlugin.logWarn(module.getProject(), "Failed to start Interface Builder integrator for module " + module.getName() + ": " + e.getMessage());
             }
@@ -110,13 +105,6 @@ public class IBIntegratorManager {
         }
     }
 
-    public void removeDaemon(Module module) {
-        if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
-            return;
-        }
-        RoboVmPlugin.logInfo(module.getProject(), "Stopping Interface Builder integrator daemon for module %s", module.getName());
-    }
-
     public void removeAllDaemons() {
         if (!hasIBIntegrator || !System.getProperty("os.name").toLowerCase().contains("mac os x")) {
             return;
@@ -124,10 +112,19 @@ public class IBIntegratorManager {
         for(IBIntegratorProxy daemon: daemons.values()) {
             daemon.shutDown();
         }
+        daemons.clear();
         RoboVmPlugin.logInfo(null, "Stopping all Interface Builder integrator daemons");
     }
 
     public IBIntegratorProxy getProxy(Module module) {
-        return daemons.get(module.getName());
+        return daemons.get(getModuleId(module));
+    }
+
+    public static String getModuleId(Module module) {
+        if(module.getProject().getName().equals(module.getName())) {
+            return module.getName();
+        } else {
+            return module.getProject().getName() + "." + module.getName();
+        }
     }
 }

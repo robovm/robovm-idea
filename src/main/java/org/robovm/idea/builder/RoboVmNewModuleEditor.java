@@ -31,5 +31,4 @@ public class RoboVmNewModuleEditor {
     public JRadioButton mavenRadioButton;
     public JRadioButton noneRadioButton;
     public JLabel buildSystemLabel;
-
 }

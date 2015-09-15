@@ -1,24 +1,5 @@
 package org.robovm.idea.components.setupwizard;
 
-import com.intellij.openapi.application.ApplicationInfo;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.fileChooser.FileChooserDialog;
-import com.intellij.openapi.fileChooser.FileChooserFactory;
-import com.intellij.openapi.projectRoots.ProjectJdkTable;
-import com.intellij.openapi.projectRoots.Sdk;
-import com.intellij.openapi.util.BuildNumber;
-import com.intellij.openapi.util.Version;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.uiDesigner.core.GridConstraints;
-import com.intellij.uiDesigner.core.GridLayoutManager;
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.io.IOUtils;
-import org.zeroturnaround.zip.NameMapper;
-import org.zeroturnaround.zip.ZipUtil;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,16 +11,36 @@ import java.util.zip.GZIPInputStream;
 
 import javax.swing.*;
 
-public class AndroidSetupDialog extends JDialog {
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.IOUtils;
+import org.zeroturnaround.zip.NameMapper;
+import org.zeroturnaround.zip.ZipUtil;
+
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.fileChooser.FileChooserDialog;
+import com.intellij.openapi.fileChooser.FileChooserFactory;
+import com.intellij.openapi.projectRoots.ProjectJdkTable;
+import com.intellij.openapi.projectRoots.Sdk;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+
+public class AndroidBundledSetupDialog extends JDialog {
+    private String sdkDir;
+
     enum OS {
         MacOsX,
         Windows,
         Linux
     }
 
-    private static final String ANDROID_SDK_URL_MACOSX = "http://dl.google.com/android/android-sdk_r24.3.4-macosx.zip";
-    private static final String ANDROID_SDK_URL_WINDOWS = "http://dl.google.com/android/android-sdk_r24.3.4-windows.zip";
-    private static final String ANDROID_SDK_URL_LINUX = "http://dl.google.com/android/android-sdk_r24.3.4-linux.tgz";
+    private static final String ANDROID_SDK_URL_MACOSX = "http://download.robovm.org/android-sdks/android-sdk-macosx-23-rvm-1.8.tar.gz";
+    private static final String ANDROID_SDK_URL_WINDOWS = "http://download.robovm.org/android-sdks/android-sdk-windows-23-rvm-1.8.zip";
+    private static final String ANDROID_SDK_URL_LINUX = "http://download.robovm.org/android-sdks/android-sdk-linux-23-rvm-1.8.tar.gz";
 
     private static OS os;
     private static String ANDROID_SDK_URL;
@@ -61,52 +62,14 @@ public class AndroidSetupDialog extends JDialog {
     private JLabel infoText;
     private JButton nextButton;
     private JButton installAndroidSdkButton;
-    private JButton browseButton;
-    private JTextField sdkLocation;
     private JPanel installPanel;
 
-    public AndroidSetupDialog() {
+    public AndroidBundledSetupDialog() {
         setContentPane(panel);
         setModalityType(ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("RoboVM Setup");
         infoText.setText("<html>Install the Android SDK if you want to develop for both iOS and Android.</br>");
-
-        sdkLocation.setText(System.getProperty("user.home") + "/Library/Android/sdk");
-
-        browseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(true, false, false, false, false, false) {
-                    @Override
-                    public boolean isFileVisible(VirtualFile file, boolean showHiddenFiles) {
-                        return file.isDirectory();
-                    }
-
-                    @Override
-                    public boolean isFileSelectable(VirtualFile file) {
-                        return file.isDirectory();
-                    }
-                };
-                FileChooserDialog fileChooser = FileChooserFactory.getInstance().createFileChooser(fileChooserDescriptor, null, panel);
-                VirtualFile location = null;
-                if (new File(sdkLocation.getText()).exists()) {
-                    location = LocalFileSystem.getInstance().findFileByIoFile(new File(sdkLocation.getText()));
-                }
-                VirtualFile[] dir = fileChooser.choose(null, location);
-                if (dir != null && dir.length > 0) {
-                    sdkLocation.setText(dir[0].getCanonicalPath());
-                    boolean validSdk = isAndroidSdkInstalled(sdkLocation.getText());
-                    if(validSdk) {
-                        installAndroidSdkButton.setVisible(false);
-                        nextButton.setText("Next");
-                    } else {
-                        installAndroidSdkButton.setVisible(true);
-                        nextButton.setText("Skip");
-                    }
-                }
-            }
-        });
 
         installAndroidSdkButton.addActionListener(new ActionListener() {
             @Override
@@ -118,31 +81,16 @@ public class AndroidSetupDialog extends JDialog {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(nextButton.getText().equals("Skip")) {
-                    dispose();
-                } else {
-                    installAndroidSdk();
-                }
+                dispose();
             }
         });
-
-        if(isAndroidSdkInstalled(sdkLocation.getText())) {
-            nextButton.setText("Next");
-            installAndroidSdkButton.setVisible(false);
-        } else {
-            nextButton.setText("Skip");
-            installAndroidSdkButton.setVisible(true);
-        }
 
         pack();
         setLocationRelativeTo(null);
     }
 
     private void installAndroidSdk() {
-        sdkLocation.setEnabled(false);
         nextButton.setEnabled(false);
-        browseButton.setEnabled(false);
-
         downloadAndroidSdk();
     }
 
@@ -167,7 +115,7 @@ public class AndroidSetupDialog extends JDialog {
         installPanel.revalidate();
 
         installAndroidSdkButton.setText("Cancel");
-        for(ActionListener listener: installAndroidSdkButton.getActionListeners()) {
+        for (ActionListener listener : installAndroidSdkButton.getActionListeners()) {
             installAndroidSdkButton.removeActionListener(listener);
         }
         final BooleanFlag cancel = new BooleanFlag();
@@ -178,58 +126,51 @@ public class AndroidSetupDialog extends JDialog {
             }
         });
 
-        final String sdkDir = sdkLocation.getText();
+        final String sdkDir = getSdkDir();
 
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if(!isAndroidSdkInstalled(sdkDir)) {
-                        downloadAndroidSdk(sdkDir, progressBar, label, cancel);
-                    }
+                    // Download our bundle
+                    downloadAndroidSdk(sdkDir, progressBar, label, cancel);
 
-                    if (!areAndroidComponentsInstalled(sdkDir)) {
-                        installAndroidSdkComponents(sdkDir, label);
-                    }
+                    // Setup the Android SDK for our installation dir
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        @Override
+                        public void run() {
+                            ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                                @Override
+                                public void run() {
+                                    String clazz = "com.android.tools.idea.sdk.DefaultSdks";
+                                    String method = "createAndroidSdksForAllTargets";
 
-                    // spawn the Sdk setup dialog
-                    if( !isAndroidSdkSetup()) {
-                        SwingUtilities.invokeAndWait(new Runnable() {
-                            @Override
-                            public void run() {
-                                ApplicationManager.getApplication().runWriteAction(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        String clazz = "com.android.tools.idea.sdk.DefaultSdks";
-                                        String method = "createAndroidSdksForAllTargets";
+                                    try {
+                                        Class cls = AndroidBundledSetupDialog.class.getClassLoader().loadClass(clazz);
+                                        Method mtd = cls.getMethod(method, File.class);
+                                        mtd.invoke(null, new File(sdkDir));
+                                    } catch (Throwable t) {
+                                        clazz = "com.android.tools.idea.sdk.IdeSdks";
+                                        method = "createAndroidSdkPerAndroidTarget";
 
                                         try {
-                                            Class cls = AndroidSetupDialog.class.getClassLoader().loadClass(clazz);
+                                            Class cls = AndroidBundledSetupDialog.class.getClassLoader().loadClass(clazz);
                                             Method mtd = cls.getMethod(method, File.class);
                                             mtd.invoke(null, new File(sdkDir));
-                                        } catch(Throwable t) {
-                                            clazz = "com.android.tools.idea.sdk.IdeSdks";
-                                            method = "createAndroidSdkPerAndroidTarget";
-
-                                            try {
-                                                Class cls = AndroidSetupDialog.class.getClassLoader().loadClass(clazz);
-                                                Method mtd = cls.getMethod(method, File.class);
-                                                mtd.invoke(null, new File(sdkDir));
-                                            } catch(Throwable t2) {
-                                                t2.printStackTrace();
-                                                System.out.println("Couldn't create Android SDK");
-                                            }
+                                        } catch (Throwable t2) {
+                                            t2.printStackTrace();
+                                            System.out.println("Couldn't create Android SDK");
                                         }
                                     }
-                                });
+                                }
+                            });
                             }
-                        });
-                    }
+                    });
 
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            AndroidSetupDialog.this.dispose();
+                            AndroidBundledSetupDialog.this.dispose();
                         }
                     });
                 } catch (final Throwable e) {
@@ -237,8 +178,10 @@ public class AndroidSetupDialog extends JDialog {
                         @Override
                         public void run() {
                             label.setForeground(Color.red);
-                            label.setText("Couldn't install Android SDK: " + e.getMessage());
-                            e.printStackTrace();
+                            String msg = e.getMessage().substring(0, Math.min(50, e.getMessage().length() - 1)) + " ...";
+                            label.setText("Couldn't install Android SDK: " + msg);
+                            installAndroidSdkButton.setEnabled(false);
+                            nextButton.setEnabled(true);
                         }
                     });
                 }
@@ -246,41 +189,29 @@ public class AndroidSetupDialog extends JDialog {
         }).start();
     }
 
-    private void installAndroidSdkComponents(String sdkDir, final JLabel label) throws IOException, InterruptedException {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                label.setText("Installing SDK components");
-            }
-        });
-
-        // done with unpacking, let's show the components
-        // installer wizard
-        Process process = new ProcessBuilder(new File(sdkDir, os == OS.Windows? "tools/android.bat": "tools/android").getAbsolutePath()).start();
-        process.waitFor();
-    }
-
     private void downloadAndroidSdk(final String sdkDir, final JProgressBar progressBar, final JLabel label, final BooleanFlag cancel) throws IOException {
         // download the SDK zip to a temporary location
         File destination = File.createTempFile("android-sdk", ".zip");
         destination.deleteOnExit();
-        System.out.println(destination);
+
         URL url = new URL(ANDROID_SDK_URL);
         URLConnection con = url.openConnection();
-        long length = con.getContentLengthLong();
+        final long length = con.getContentLengthLong();
         byte[] buffer = new byte[1024*100];
         try (InputStream in = con.getInputStream(); OutputStream out = new BufferedOutputStream(new FileOutputStream(destination))) {
             int read = in.read(buffer);
-            int total = read;
+            long total = read;
             while(read != -1) {
                 out.write(buffer, 0, read);
                 read = in.read(buffer);
                 total += read;
                 final int percentage = (int)(((double)total / (double)length) * 100);
+                final long totalRead = total;
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         progressBar.setValue(Math.min(100, percentage));
+                        label.setText("Downloading Android SDK (" + (totalRead / 1024 / 1024) + "/" + (length  / 1024 / 1024) + "MB)");
                     }
                 });
 
@@ -300,7 +231,6 @@ public class AndroidSetupDialog extends JDialog {
                             });
                             installPanel.removeAll();
                             installPanel.revalidate();
-                            browseButton.setEnabled(true);
                             nextButton.setEnabled(true);
                         }
                     });
@@ -347,9 +277,10 @@ public class AndroidSetupDialog extends JDialog {
             TarArchiveInputStream in = null;
             try {
                 in = new TarArchiveInputStream(new GZIPInputStream(new FileInputStream(destination)));
-                ArchiveEntry entry = null;
-                while ((entry = in.getNextEntry()) != null) {
+                TarArchiveEntry entry = null;
+                while ((entry = (TarArchiveEntry)in.getNextEntry()) != null) {
                     File f = new File(tmpOutputDir, entry.getName());
+
                     if (entry.isDirectory()) {
                         f.mkdirs();
                     } else {
@@ -360,6 +291,10 @@ public class AndroidSetupDialog extends JDialog {
                             IOUtils.copy(in, out);
                         } finally {
                             IOUtils.closeQuietly(out);
+                        }
+
+                        if((entry.getMode() & 0100) != 0) {
+                            f.setExecutable(true);
                         }
                     }
 
@@ -384,6 +319,12 @@ public class AndroidSetupDialog extends JDialog {
             }
         }
 
+        for(File file: new File(outputDir, "platform-tools").listFiles()) {
+            if(file.isFile()) {
+                file.setExecutable(true);
+            }
+        }
+
         for(File file: new File(outputDir, "tools/proguard/bin").listFiles()) {
             if(file.isFile()) {
                 file.setExecutable(true);
@@ -403,39 +344,9 @@ public class AndroidSetupDialog extends JDialog {
         }
     }
 
-    public static boolean isAndroidSdkInstalled(String sdkDir) {
-        File sdk = new File(sdkDir, os == OS.Windows? "tools/android.bat": "tools/android");
-        return sdk.exists();
-    }
-
-    public static boolean isAndroidSdkSetup() {
-        for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
-            if (sdk.getSdkType().getName().equals("Android SDK")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static String getAndroidSdkLocation() {
-        for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
-            if (sdk.getSdkType().getName().equals("Android SDK")) {
-                return sdk.getHomePath();
-            }
-        }
-        return null;
-    }
-
-    public static boolean areAndroidComponentsInstalled(String sdkDir) {
-        return new File(sdkDir, "platforms").list().length > 0;
+    public static String getSdkDir() {
+        return new File(new File(System.getProperty("user.home")), "/Library/RoboVM/android-sdk").getAbsolutePath();
     }
 
     private void createUIComponents() {}
-
-    public static void main(String[] args) {
-        AndroidSetupDialog dialog = new AndroidSetupDialog();
-        dialog.pack();
-        dialog.setVisible(true);
-        System.exit(0);
-    }
 }

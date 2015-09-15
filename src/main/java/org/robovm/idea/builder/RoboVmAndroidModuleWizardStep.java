@@ -4,7 +4,7 @@ import com.intellij.ide.util.projectWizard.ModuleWizardStep;
 import com.intellij.ide.util.projectWizard.WizardContext;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.roots.ui.configuration.ModulesProvider;
-import org.robovm.idea.components.setupwizard.AndroidSetupDialog;
+import org.robovm.idea.RoboVmPlugin;
 
 import javax.swing.*;
 
@@ -31,6 +31,6 @@ public class RoboVmAndroidModuleWizardStep extends ModuleWizardStep {
     @Override
     public boolean validate() throws ConfigurationException {
         editor.validate();
-        return AndroidSetupDialog.isAndroidSdkSetup();
+        return RoboVmPlugin.isAndroidSdkSetup();
     }
 }

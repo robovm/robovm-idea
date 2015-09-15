@@ -16,6 +16,27 @@
  */
 package org.robovm.idea;
 
+import java.io.*;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.io.IOUtils;
+import org.jetbrains.annotations.NotNull;
+import org.robovm.compiler.Version;
+import org.robovm.compiler.config.Arch;
+import org.robovm.compiler.config.Config;
+import org.robovm.compiler.config.Resource;
+import org.robovm.compiler.log.Logger;
+import org.robovm.compiler.util.InfoPList;
+import org.robovm.idea.compilation.RoboVmCompileTask;
+import org.robovm.idea.config.RoboVmGlobalConfig;
+import org.robovm.idea.interfacebuilder.RoboVmFileEditorManagerListener;
+import org.robovm.idea.sdk.RoboVmSdkType;
+
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
@@ -23,9 +44,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.compiler.CompileScope;
 import com.intellij.openapi.compiler.CompileTask;
 import com.intellij.openapi.compiler.CompilerManager;
-import com.intellij.openapi.compiler.CompilerPaths;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
-import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.module.ModuleManager;
 import com.intellij.openapi.project.Project;
@@ -43,40 +62,128 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.util.ui.UIUtil;
 
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.io.IOUtils;
-import org.jetbrains.annotations.NotNull;
-import org.robovm.compiler.Version;
-import org.robovm.compiler.clazz.Path;
-import org.robovm.compiler.config.Arch;
-import org.robovm.compiler.config.Config;
-import org.robovm.compiler.config.OS;
-import org.robovm.compiler.config.Resource;
-import org.robovm.compiler.log.Logger;
-import org.robovm.compiler.util.InfoPList;
-import org.robovm.idea.compilation.RoboVmCompileTask;
-import org.robovm.idea.config.RoboVmGlobalConfig;
-import org.robovm.idea.interfacebuilder.RoboVmFileEditorManagerListener;
-import org.robovm.idea.sdk.RoboVmSdkType;
-
-import java.io.*;
-import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.GZIPInputStream;
-
 /**
  * Provides util for the other components of the plugin such
  * as logging.
  */
 public class RoboVmPlugin {
+    public enum OS {
+        MacOsX,
+        Windows,
+        Linux
+    }
+
+    static {
+        if(System.getProperty("os.name").contains("Mac")) {
+            os = OS.MacOsX;
+        } else if(System.getProperty("os.name").contains("Windows")) {
+            os = OS.Windows;
+        } else if(System.getProperty("os.name").contains("Linux")) {
+            os = OS.Linux;
+        }
+    }
+
     private static final String ROBOVM_TOOLWINDOW_ID = "RoboVM";
+    private static OS os;
     static volatile Map<Project, ConsoleView> consoleViews = new ConcurrentHashMap<>();
     static volatile Map<Project, ToolWindow> toolWindows = new ConcurrentHashMap<>();
     static volatile Map<Project, VirtualFileListener> fileListeners = new ConcurrentHashMap<>();
     static final List<UnprintedMessage> unprintedMessages = new ArrayList<UnprintedMessage>();
+
+    public static OS getOs() {
+        return os;
+    }
+
+    public static String getBestAndroidSdkVersion() {
+        int androidSdkVersion = 0;
+        File androidSdkDir = getBestAndroidSdkDir();
+        if(androidSdkDir == null) {
+            return "23";
+        }
+        File platformsDir = new File(androidSdkDir, "platforms");
+        for(File file: platformsDir.listFiles()) {
+            String[] tokens = file.getName().split("-");
+            if(tokens.length == 2) {
+                try {
+                    int version = Integer.parseInt(tokens[1]);
+                    if(version > androidSdkVersion) {
+                        androidSdkVersion = version;
+                    }
+                } catch(NumberFormatException e) {
+                    // nothing we can do
+                }
+            }
+        }
+        if(androidSdkVersion == 0) {
+            return "23";
+        } else {
+            return Integer.toString(androidSdkVersion);
+        }
+    }
+
+    public static String getBestAndroidBuildToolsVersion() {
+        int androidBuildToolsVersion = 0;
+        String androidBuildToolsVersionString = "";
+        File androidSdkDir = getBestAndroidSdkDir();
+        if(androidSdkDir == null) {
+            return "23.0.1";
+        }
+        File platformsDir = new File(androidSdkDir, "build-tools");
+        for(File file: platformsDir.listFiles()) {
+            String[] tokens = file.getName().split("\\.");
+            if(tokens.length == 3) {
+                try {
+                    int version = Integer.parseInt(tokens[0]) * 1000 * 1000 +
+                                  Integer.parseInt(tokens[1]) * 1000 +
+                                  Integer.parseInt(tokens[2]);
+                    if(version > androidBuildToolsVersion) {
+                        androidBuildToolsVersion = version;
+                        androidBuildToolsVersionString = file.getName();
+                    }
+                } catch(NumberFormatException e) {
+                    // nothing we can do
+                }
+            }
+        }
+        if(androidBuildToolsVersion == 0) {
+            return "23.0.1";
+        } else {
+            return androidBuildToolsVersionString;
+        }
+    }
+
+    public static File getBestAndroidSdkDir() {
+        Sdk bestSdk = null;
+        for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
+            if (sdk.getSdkType().getName().equals("Android SDK")) {
+                if(sdk.getHomePath().contains("/Library/RoboVM/")) {
+                    return new File(sdk.getHomePath());
+                } else {
+                    bestSdk = sdk;
+                }
+            }
+        }
+        return new File(bestSdk.getHomePath());
+    }
+
+
+    public static boolean isAndroidSdkInstalled(String sdkDir) {
+        File sdk = new File(sdkDir, os == OS.Windows? "tools/android.bat": "tools/android");
+        return sdk.exists();
+    }
+
+    public static boolean isAndroidSdkSetup() {
+        for (Sdk sdk : ProjectJdkTable.getInstance().getAllJdks()) {
+            if (sdk.getSdkType().getName().equals("Android SDK")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean areAndroidComponentsInstalled(String sdkDir) {
+        return new File(sdkDir, "platforms").list().length > 0;
+    }
 
     static class UnprintedMessage {
         final String string;
@@ -467,7 +574,7 @@ public class RoboVmPlugin {
         return buildDir;
     }
 
-    public static File getModuleBuildDir(Module module, String runConfigName, OS os, Arch arch) {
+    public static File getModuleBuildDir(Module module, String runConfigName, org.robovm.compiler.config.OS os, Arch arch) {
         File buildDir = new File(getModuleBaseDir(module), "robovm-build/tmp/" + runConfigName + "/" + os + "/" + arch);
         if (!buildDir.exists()) {
             if (!buildDir.mkdirs()) {

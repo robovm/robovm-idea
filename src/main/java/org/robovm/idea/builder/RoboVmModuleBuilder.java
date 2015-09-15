@@ -31,7 +31,6 @@ import org.jetbrains.plugins.gradle.service.project.wizard.GradleProjectImportPr
 import org.jetbrains.plugins.gradle.settings.DistributionType;
 import org.robovm.compiler.Version;
 import org.robovm.idea.RoboVmPlugin;
-import org.robovm.idea.components.setupwizard.AndroidSetupDialog;
 import org.robovm.idea.sdk.RoboVmSdkType;
 import org.robovm.templater.Templater;
 
@@ -112,7 +111,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
             buildSystem = BuildSystem.Gradle;
         }
 
-        if (!robovmDir.isEmpty() && !AndroidSetupDialog.isAndroidSdkSetup()) {
+        if (!robovmDir.isEmpty() && !RoboVmPlugin.isAndroidSdkSetup()) {
             RoboVmAndroidModuleWizardStep androidStep = new RoboVmAndroidModuleWizardStep(this, wizardContext,
                     modulesProvider);
             return new ModuleWizardStep[] { androidStep, wizardStep };
@@ -192,6 +191,8 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
         templater.executable(appName);
         templater.mainClass(packageName + "." + mainClassName);
         templater.packageName(packageName);
+        templater.androidSdkVersion(RoboVmPlugin.getBestAndroidSdkVersion());
+        templater.androidBuildToolsVersion(RoboVmPlugin.getBestAndroidBuildToolsVersion());
         templater.buildProject(new File(project.getBasePath()));
 
         try {
@@ -212,7 +213,7 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                 if (!robovmDir.isEmpty()) {
                     final File localProps = new File(project.getBasePath() + "/local.properties");
                     try (FileWriter writer = new FileWriter(localProps)) {
-                        writer.write("sdk.dir=" + AndroidSetupDialog.getAndroidSdkLocation().replace('\\', '/'));
+                        writer.write("sdk.dir=" + RoboVmPlugin.getBestAndroidSdkDir().getAbsolutePath().replace('\\', '/'));
                     }
                 }
             } else if (buildSystem == BuildSystem.Maven) {

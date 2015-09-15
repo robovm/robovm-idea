@@ -1,17 +1,12 @@
 package org.robovm.idea.builder;
 
-import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.fileChooser.FileChooserDialog;
-import com.intellij.openapi.fileChooser.FileChooserFactory;
-import com.intellij.openapi.vfs.LocalFileSystem;
-import com.intellij.openapi.vfs.VirtualFile;
-import org.robovm.idea.components.setupwizard.AndroidSetupDialog;
+import org.robovm.idea.RoboVmPlugin;
+import org.robovm.idea.components.setupwizard.AndroidBundledSetupDialog;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 
 /**
  * Created by badlogic on 08/07/15.
@@ -28,7 +23,7 @@ public class RoboVmAndroidSdkEditor {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
-                        new AndroidSetupDialog().show();
+                        new AndroidBundledSetupDialog().show();
                         validate();
                     }
                 });
@@ -38,7 +33,7 @@ public class RoboVmAndroidSdkEditor {
     }
 
     public void validate() {
-        if(AndroidSetupDialog.isAndroidSdkSetup()) {
+        if(RoboVmPlugin.isAndroidSdkSetup()) {
             errorLabel.setForeground(new Color(0, 200, 0));
             errorLabel.setText("Found valid Android SDK!");
             installSdkButton.setVisible(false);

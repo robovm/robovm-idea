@@ -56,8 +56,8 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
 
     private void displaySetupWizard() {
         // uncomment for debugging
-        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
-        // PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
+        PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD);
+        PropertiesComponent.getInstance().unsetValue(ROBOVM_HAS_SHOWN_LICENSE_WIZARD);
 
         // make sure a JDK is configured
         Sdk jdk = RoboVmSdkType.findBestJdk();
@@ -84,10 +84,10 @@ public class RoboVmApplicationComponent implements ApplicationComponent {
         }
 
         // optionally setup Android SDK
-        if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false) && !AndroidSetupDialog.isAndroidSdkSetup()) {
-            AndroidSetupDialog setupWizard = new AndroidSetupDialog();
+        if(!PropertiesComponent.getInstance().getBoolean(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, false)) {
+            AndroidBundledSetupDialog setupWizard = new AndroidBundledSetupDialog();
             setupWizard.show();
-            // PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
+            PropertiesComponent.getInstance().setValue(ROBOVM_HAS_SHOWN_ANDROID_WIZARD, "true");
         }
 
         // Ask user to sign up or enter a license key

@@ -266,11 +266,9 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                                 } catch(Throwable t) {
                                     // could be a non-Java project
                                     t.printStackTrace();
-                                    System.out.println("WTF");
                                 }
                             }
                             modifiableModel.commit();
-                            System.out.println("WTF 2");
                         }
                     });
                 }

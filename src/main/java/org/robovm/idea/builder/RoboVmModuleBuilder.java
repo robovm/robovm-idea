@@ -22,6 +22,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import com.intellij.openapi.module.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.Nullable;
@@ -44,8 +45,6 @@ import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.externalSystem.model.ExternalSystemDataKeys;
 import com.intellij.openapi.externalSystem.service.project.manage.ProjectDataManager;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.module.ModuleType;
-import com.intellij.openapi.module.StdModuleTypes;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.DumbAwareRunnable;
 import com.intellij.openapi.project.DumbService;
@@ -254,6 +253,21 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                         new ProjectImportProvider[] { gradleProjectImportProvider });
                 if (wizard.getStepCount() <= 0 || wizard.showAndGet()) {
                     ImportModuleAction.createFromWizard(project, wizard);
+
+                    ApplicationManager.getApplication().runWriteAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            ModifiableModuleModel modifiableModel = ModuleManager.getInstance(project).getModifiableModel();
+                            for (Module module : modifiableModel.getModules()) {
+                                try {
+                                    ((LanguageLevelModuleExtensionImpl)LanguageLevelModuleExtensionImpl.getInstance(module).getModifiableModel(true)).setLanguageLevel(LanguageLevel.JDK_1_8);
+                                } catch(Throwable t) {
+                                    // could be a non-Java project
+                                }
+                            }
+                            modifiableModel.commit();
+                        }
+                    });
                 }
             }
         } else {

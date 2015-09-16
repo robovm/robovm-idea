@@ -42,7 +42,7 @@ public class JdkSetupDialog extends JDialog {
         setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setTitle("RoboVM Setup");
-        infoText.setText("<html>RoboVM requires Java Development Kit (JDK) 7.0 or higher.<br><br>Please specify the location of your JDK.");
+        infoText.setText("<html>RoboVM requires Java Development Kit (JDK) 8.0 or higher.<br><br>Please specify the location of your JDK.");
 
         for(String jdkLocation: JavaSdk.getInstance().suggestHomePaths()) {
             jdkHome.setText(jdkLocation);

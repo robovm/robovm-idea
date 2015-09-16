@@ -260,12 +260,17 @@ public class RoboVmModuleBuilder extends JavaModuleBuilder {
                             ModifiableModuleModel modifiableModel = ModuleManager.getInstance(project).getModifiableModel();
                             for (Module module : modifiableModel.getModules()) {
                                 try {
-                                    ((LanguageLevelModuleExtensionImpl)LanguageLevelModuleExtensionImpl.getInstance(module).getModifiableModel(true)).setLanguageLevel(LanguageLevel.JDK_1_8);
+                                    LanguageLevelModuleExtensionImpl langModel = (LanguageLevelModuleExtensionImpl) LanguageLevelModuleExtensionImpl.getInstance(module).getModifiableModel(true);
+                                    langModel.setLanguageLevel(LanguageLevel.JDK_1_8);
+                                    langModel.commit();
                                 } catch(Throwable t) {
                                     // could be a non-Java project
+                                    t.printStackTrace();
+                                    System.out.println("WTF");
                                 }
                             }
                             modifiableModel.commit();
+                            System.out.println("WTF 2");
                         }
                     });
                 }

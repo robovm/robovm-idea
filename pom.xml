@@ -4,7 +4,7 @@
     <groupId>org.robovm</groupId>
     <artifactId>org.robovm.idea</artifactId>
     <name>RoboVM plugin for Intellij IDEA</name>
-    <version>1.8.0</version>
+    <version>1.8.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -17,7 +17,7 @@
         <connection>scm:git:git://github.com/robovm/robovm-idea.git</connection>
         <developerConnection>scm:git:git@github.com:robovm/robovm-idea.git</developerConnection>
         <url>https://github.com/robovm/robovm-idea.git</url>
-      <tag>robovm-idea-1.8.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <profiles>
